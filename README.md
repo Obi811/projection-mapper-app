@@ -1,16 +1,78 @@
-# projection_mapper_app
+# Projection Mapper for macOS
 
-A new Flutter project.
+![App Screenshot](screenshots/main.png)
+![Demo](screenshots/demo.gif)
 
-## Getting Started
+## 🎯 Features
+✅ **Real-time Projection Mapping** - Live preview with draggable control points  
+✅ **Multiple Surfaces** - Create and manage multiple projection areas  
+✅ **Image Support** - JPG, PNG, BMP, GIF formats  
+✅ **Project Management** - Save/Load JSON projects, CSV export  
+✅ **Professional UI** - Dark theme, responsive macOS design  
 
-This project is a starting point for a Flutter application.
+## 🚀 Quick Start
+```bash
+# Clone repository
+git clone https://github.com/yourusername/projection-mapper-macos.git
 
-A few resources to get you started if this is your first Flutter project:
+# Install dependencies
+flutter pub get
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# Run on macOS
+flutter run -d macos
+📁 Project Structure
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+text
+lib/
+├── models/          # Data models (Projection, ControlPoint)
+├── ui/             # UI components (Canvas, Panels, Dialogs)
+├── services/       # Business logic (ProjectionService)
+└── extensions/     # Helper extensions
+🔧 Requirements
+
+Flutter 3.0+
+macOS 10.15+
+Xcode 14+
+📄 License
+
+MIT License - see LICENSE file
+
+text
+
+### **4. Wichtige Dateien erstellen**
+```bash
+# Repository-Struktur
+mkdir -p .github/workflows screenshots docs
+
+# Dokumentation
+touch docs/ARCHITECTURE.md docs/DEVELOPMENT.md docs/ROADMAP.md
+
+# GitHub Templates
+touch .github/ISSUE_TEMPLATE/feature_request.md
+touch .github/ISSUE_TEMPLATE/bug_report.md
+ARCHITECTURE.md Inhalt:
+
+markdown
+# System Architecture
+
+## Core Components
+1. **ProjectionService** - Central business logic
+2. **ProjectionCanvas** - Interactive drawing surface
+3. **PreviewPanel** - Real-time projection preview
+4. **ControlPanel** - UI controls and tools
+
+## Data Flow
+User Input → ControlPanel → ProjectionService → Canvas/Preview
+
+## Extension Points
+- Plugin system (planned)
+- Export formats
+- Protocol support (OSC/Art-Net)
+5. Screenshots hinzufügen
+
+bash
+# App in verschiedenen Zuständen screenshoten:
+# 1. main.png - Hauptansicht
+# 2. canvas.png - Canvas mit Punkten
+# 3. preview.png - Vorschau-Modus
+# 4. export.png - Export-Dialog
