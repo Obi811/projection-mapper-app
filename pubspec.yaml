@@ -1,5 +1,5 @@
 name: projection_mapper_app
-description: A professional projection mapping tool
+description: A professional projection mapper app for macOS
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  file_picker: ^6.1.1
+  path_provider: ^2.1.1
 
 dev_dependencies:
   flutter_test:

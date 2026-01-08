@@ -1,75 +1,62 @@
-import 'dart:convert';
 import 'control_point.dart';
 
 class Projection {
-  String id;
   String name;
   List<ControlPoint> points;
   String? imagePath;
-  DateTime lastModified;
+  DateTime createdAt;
+  DateTime? updatedAt;
 
   Projection({
-    required this.id,
     required this.name,
     required this.points,
     this.imagePath,
-    DateTime? lastModified,
-  }) : lastModified = lastModified ?? DateTime.now();
+    required this.createdAt,
+    this.updatedAt,
+  });
 
-  Projection.initial()
-      : id = DateTime.now().millisecondsSinceEpoch.toString(),
-        name = 'New Project',
-        points = [
-          ControlPoint(id: '1', x: 0.2, y: 0.2, label: 'TL'),
-          ControlPoint(id: '2', x: 0.8, y: 0.2, label: 'TR'),
-          ControlPoint(id: '3', x: 0.8, y: 0.8, label: 'BR'),
-          ControlPoint(id: '4', x: 0.2, y: 0.8, label: 'BL'),
-        ],
-        lastModified = DateTime.now();
-
-  void addPoint(ControlPoint point) {
-    points.add(point);
-    lastModified = DateTime.now();
+  factory Projection.create({required String name}) {
+    return Projection(
+      name: name,
+      points: ControlPoint.createDefaultQuad(),
+      createdAt: DateTime.now(),
+    );
   }
 
-  void removePoint(String pointId) {
-    if (points.length > 3) {
-      points.removeWhere((p) => p.id == pointId);
-      lastModified = DateTime.now();
-    }
-  }
-
-  void clearSelection() {
-    for (var point in points) {
-      point.isSelected = false;
-    }
-  }
-
-  ControlPoint? getSelectedPoint() {
-    for (var point in points) {
+  ControlPoint? get selectedPoint {
+    for (final point in points) {
       if (point.isSelected) return point;
     }
     return null;
   }
 
-  String toJsonString() {
-    final json = {
-      'id': id,
+  void deselectAllPoints() {
+    for (var i = 0; i < points.length; i++) {
+      points[i] = points[i].copyWith(isSelected: false);
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
       'name': name,
       'points': points.map((p) => p.toJson()).toList(),
       'imagePath': imagePath,
-      'lastModified': lastModified.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
-    final encoder = JsonEncoder.withIndent('  ');
-    return encoder.convert(json);
   }
 
-  String toCsvString() {
-    final buffer = StringBuffer();
-    buffer.writeln('id,x,y,label');
-    for (var point in points) {
-      buffer.writeln('${point.id},${point.x},${point.y},${point.label}');
-    }
-    return buffer.toString();
+  factory Projection.fromJson(Map<String, dynamic> json) {
+    return Projection(
+      name: json['name'],
+      points: (json['points'] as List)
+          .map((p) => ControlPoint.fromJson(p))
+          .toList(),
+      imagePath: json['imagePath'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: json['updatedAt'] != null 
+          ? DateTime.parse(json['updatedAt']) 
+          : null,
+    );
   }
 }
