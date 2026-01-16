@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/projection_service.dart';
-import '../models/multi_surface.dart';  // WICHTIGER IMPORT HINZUFÜGEN
-import '../models/control_point.dart';  // WICHTIGER IMPORT HINZUFÜGEN
+import '../models/multi_surface.dart';
+import '../models/control_point.dart';
 
 class SurfaceManagerPanel extends StatefulWidget {
-  final ProjectionService service;
-  
-  const SurfaceManagerPanel({super.key, required this.service});
+  const SurfaceManagerPanel({super.key});
   
   @override
   _SurfaceManagerPanelState createState() => _SurfaceManagerPanelState();
@@ -15,156 +14,173 @@ class SurfaceManagerPanel extends StatefulWidget {
 class _SurfaceManagerPanelState extends State<SurfaceManagerPanel> {
   @override
   Widget build(BuildContext context) {
-    final project = widget.service.multiProject;
-    
-    if (project == null) {
-      return _buildEmptyState();
-    }
-    
-    return Container(
-      width: 250,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        border: Border(right: BorderSide(color: Colors.grey[800]!)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey[800]!)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.layers, size: 20),
-                const SizedBox(width: 8),
-                const Text('Surfaces', style: TextStyle(fontWeight: FontWeight.bold)),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.add, size: 20),
-                  onPressed: () {
-                    widget.service.addSurface('Surface ${project.surfaces.length + 1}');
-                  },
-                  tooltip: 'Add Surface',
-                ),
-              ],
-            ),
+    return ListenableBuilder(
+      listenable: Provider.of<ProjectionService>(context),
+      builder: (context, child) {
+        final service = Provider.of<ProjectionService>(context);
+        final project = service.multiProject;
+        
+        if (project == null) {
+          return _buildEmptyState(context);
+        }
+        
+        return Container(
+          width: 250,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border(right: BorderSide(color: Colors.grey[800]!)),
           ),
-          
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: project.surfaces.length,
-              itemBuilder: (context, index) {
-                final surface = project.surfaces[index];
-                final isSelected = surface.id == project.selectedSurfaceId;
-                
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                      ? Theme.of(context).primaryColor.withOpacity(0.2)
-                      : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected 
-                        ? Theme.of(context).primaryColor 
-                        : Colors.transparent,
-                    ),
-                  ),
-                  child: ListTile(
-                    leading: Checkbox(
-                      value: surface.isVisible,
-                      onChanged: (value) {
-                        surface.isVisible = value ?? true;
-                        widget.service.notifyListeners();
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.grey[800]!)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.layers, size: 20),
+                    const SizedBox(width: 8),
+                    const Text('Surfaces', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.add, size: 20),
+                      onPressed: () {
+                        service.addSurface('Surface ${project.surfaces.length + 1}');
                       },
+                      tooltip: 'Add Surface',
                     ),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            surface.name,
-                            style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
+                  ],
+                ),
+              ),
+              
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: project.surfaces.length,
+                  itemBuilder: (context, index) {
+                    final surface = project.surfaces[index];
+                    final isSelected = surface.id == project.selectedSurfaceId;
+                    
+                    return Container(
+                      key: ValueKey(surface.id),
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: isSelected 
+                          ? Theme.of(context).primaryColor.withOpacity(0.2)
+                          : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected 
+                            ? Theme.of(context).primaryColor 
+                            : Colors.transparent,
                         ),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, size: 18),
-                          onSelected: (value) {
-                            if (value == 'rename') _renameSurface(surface);
-                            if (value == 'duplicate') _duplicateSurface(surface);
-                            if (value == 'delete') widget.service.removeSurface(surface.id);
+                      ),
+                      child: ListTile(
+                        leading: Checkbox(
+                          value: surface.isVisible,
+                          onChanged: (value) {
+                            setState(() {
+                              surface.isVisible = value ?? true;
+                            });
+                            service.notifyListeners();
                           },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'rename',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Rename'),
-                                ],
+                        ),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                surface.name,
+                                style: TextStyle(
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
                               ),
                             ),
-                            const PopupMenuItem(
-                              value: 'duplicate',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.copy, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Duplicate'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete, size: 18, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('Delete', style: TextStyle(color: Colors.red)),
-                                ],
-                              ),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert, size: 18),
+                              onSelected: (value) {
+                                if (value == 'rename') {
+                                  _renameSurface(context, surface);
+                                } else if (value == 'duplicate') {
+                                  service.duplicateSurface(surface.id);
+                                } else if (value == 'delete') {
+                                  service.removeSurface(surface.id);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'rename',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit, size: 18),
+                                      SizedBox(width: 8),
+                                      Text('Rename'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'duplicate',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.copy, size: 18),
+                                      SizedBox(width: 8),
+                                      Text('Duplicate'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete, size: 18, color: Colors.red),
+                                      SizedBox(width: 8),
+                                      Text('Delete', style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                        onTap: () {
+                          service.selectSurface(surface.id);
+                        },
+                        dense: true,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.grey[800]!)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${project.surfaces.length} Surface${project.surfaces.length != 1 ? 's' : ''}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                    onTap: () => widget.service.selectSurface(surface.id),
-                    dense: true,
-                  ),
-                );
-              },
-            ),
-          ),
-          
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey[800]!)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${project.surfaces.length} Surface${project.surfaces.length != 1 ? 's' : ''}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    Text(
+                      '${project.surfaces.where((s) => s.isVisible).length} visible',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${project.surfaces.where((s) => s.isVisible).length} visible',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
   
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final service = Provider.of<ProjectionService>(context);
+    
     return Container(
       width: 250,
       padding: const EdgeInsets.all(20),
@@ -192,7 +208,7 @@ class _SurfaceManagerPanelState extends State<SurfaceManagerPanel> {
             icon: const Icon(Icons.add),
             label: const Text('Create Multi-Surface Project'),
             onPressed: () {
-              widget.service.createMultiSurfaceProject('Multi-Surface Project');
+              service.createMultiSurfaceProject('Multi-Surface Project');
             },
           ),
         ],
@@ -200,7 +216,8 @@ class _SurfaceManagerPanelState extends State<SurfaceManagerPanel> {
     );
   }
   
-  void _renameSurface(ProjectionSurface surface) {
+  void _renameSurface(BuildContext context, ProjectionSurface surface) {
+    final service = Provider.of<ProjectionService>(context, listen: false);
     final controller = TextEditingController(text: surface.name);
     
     showDialog(
@@ -223,8 +240,7 @@ class _SurfaceManagerPanelState extends State<SurfaceManagerPanel> {
             ),
             ElevatedButton(
               onPressed: () {
-                surface.name = controller.text;
-                widget.service.notifyListeners();
+                service.renameSurface(surface.id, controller.text);
                 Navigator.pop(context);
               },
               child: const Text('Rename'),
@@ -233,20 +249,5 @@ class _SurfaceManagerPanelState extends State<SurfaceManagerPanel> {
         );
       },
     );
-  }
-  
-  void _duplicateSurface(ProjectionSurface surface) {
-    final newSurface = ProjectionSurface(
-      id: '${surface.id}_copy_${DateTime.now().millisecondsSinceEpoch}',
-      name: '${surface.name} (Copy)',
-      points: surface.points.map((p) => p.copyWith()).toList(),
-      imagePath: surface.imagePath,
-      isVisible: surface.isVisible,
-      opacity: surface.opacity,
-      zIndex: surface.zIndex + 1,
-    );
-    
-    widget.service.multiProject?.surfaces.add(newSurface);
-    widget.service.notifyListeners();
   }
 }

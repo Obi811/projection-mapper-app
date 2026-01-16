@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'services/projection_service.dart';
 import 'ui/surface_manager_panel.dart';
 import 'ui/projection_canvas.dart';
 import 'ui/control_panel.dart';
+import 'ui/image_loader.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProjectionService()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -15,8 +24,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Projection Mapper',
-      theme: ThemeData.dark(),
+      theme: ThemeData.dark().copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
       home: const MainScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -29,52 +45,76 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final ProjectionService _service = ProjectionService();
   bool _showSurfaceManager = true;
 
   @override
-  void initState() {
-    super.initState();
-    _service.newProject('New Project');
-  }
-
-  void _toggleMultiSurfaceMode() {
-    if (_service.multiProject == null) {
-      _service.createMultiSurfaceProject('Multi-Surface Project');
-    } else {
-      _service.newProject('Single Surface Project');
-    }
-    setState(() {});
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isMultiSurface = _service.multiProject != null;
+    final service = Provider.of<ProjectionService>(context);
+    final isMultiSurface = service.multiProject != null;
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(_service.projection?.name ?? _service.multiProject?.name ?? 'Projection Mapper'),
+        title: Consumer<ProjectionService>(
+          builder: (context, service, child) {
+            return Text(
+              service.currentProjectName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            );
+          },
+        ),
         actions: [
+          // Multi/Single Toggle
           IconButton(
             icon: Icon(isMultiSurface ? Icons.layers : Icons.layers_outlined),
-            onPressed: _toggleMultiSurfaceMode,
-            tooltip: isMultiSurface ? 'Switch to Single Surface' : 'Switch to Multi-Surface',
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
             onPressed: () {
               if (isMultiSurface) {
-                _service.addSurface('New Surface');
+                service.newProject('New Single Project');
+              } else {
+                service.createMultiSurfaceProject('Multi-Surface Project');
               }
             },
-            tooltip: 'Add Surface',
+            tooltip: isMultiSurface ? 'Switch to Single Surface' : 'Switch to Multi-Surface',
           ),
+          
+          // Add Surface (nur in Multi-Modus)
+          if (isMultiSurface)
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                final count = service.multiProject!.surfaces.length;
+                service.addSurface('Surface ${count + 1}');
+              },
+              tooltip: 'Add Surface',
+            ),
+          
+          // Image Loader für Single Surface
+          if (!isMultiSurface && service.projection != null)
+            IconButton(
+              icon: const Icon(Icons.image),
+              onPressed: () => _showImagePicker(context, null),
+              tooltip: 'Load Image',
+            ),
+          
+          // Image Loader für Multi-Surface (aktuelle Surface)
+          if (isMultiSurface && service.multiProject?.selectedSurface != null)
+            IconButton(
+              icon: const Icon(Icons.image),
+              onPressed: () {
+                final surface = service.multiProject!.selectedSurface;
+                if (surface != null) {
+                  _showImagePicker(context, surface.id);
+                }
+              },
+              tooltip: 'Load Image for Selected Surface',
+            ),
+          
+          const SizedBox(width: 16),
         ],
       ),
       body: Row(
         children: [
           if (_showSurfaceManager && isMultiSurface)
-            SurfaceManagerPanel(service: _service),
+            const SurfaceManagerPanel(),
           
           Expanded(
             child: Column(
@@ -96,13 +136,39 @@ class _MainScreenState extends State<MainScreen> {
                           },
                           tooltip: 'Toggle Surface Manager',
                         ),
+                      
                       const Spacer(),
-                      Text(
-                        isMultiSurface 
-                          ? 'Multi-Surface Mode' 
-                          : 'Single Surface Mode',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isMultiSurface ? Colors.blue.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isMultiSurface ? Colors.blue : Colors.green,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isMultiSurface ? Icons.layers : Icons.crop_square,
+                              size: 16,
+                              color: isMultiSurface ? Colors.blue : Colors.green,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              isMultiSurface ? 'Multi-Surface' : 'Single Surface',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isMultiSurface ? Colors.blue : Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      
                       const SizedBox(width: 16),
                     ],
                   ),
@@ -112,7 +178,10 @@ class _MainScreenState extends State<MainScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: ProjectionCanvas(service: _service),
+                        child: Container(
+                          color: Colors.grey[900],
+                          child: const ProjectionCanvas(),
+                        ),
                       ),
                       
                       Container(
@@ -120,7 +189,7 @@ class _MainScreenState extends State<MainScreen> {
                         decoration: BoxDecoration(
                           border: Border(left: BorderSide(color: Colors.grey[800]!)),
                         ),
-                        child: ControlPanel(service: _service),
+                        child: const ControlPanel(),
                       ),
                     ],
                   ),
@@ -130,6 +199,45 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+      
+      // Floating Action Button for Quick Actions
+      floatingActionButton: Consumer<ProjectionService>(
+        builder: (context, service, child) {
+          if (!service.hasProject) {
+            return FloatingActionButton.extended(
+              icon: const Icon(Icons.add),
+              label: const Text('New Project'),
+              onPressed: () => service.newProject('New Project'),
+            );
+          }
+          return const SizedBox.shrink();  // KORREKTUR HIER: Statt null
+        },
+      ),
+    );
+  }
+  
+  void _showImagePicker(BuildContext context, String? surfaceId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return ImageLoader(
+          onImageSelected: (imagePath) {
+            if (imagePath != null) {
+              final service = Provider.of<ProjectionService>(context, listen: false);
+              
+              if (surfaceId == null) {
+                // Single Surface Mode
+                service.setImage(imagePath);
+              } else {
+                // Multi Surface Mode
+                service.setImageForSurface(surfaceId, imagePath);
+              }
+            }
+            Navigator.pop(context);
+          },
+        );
+      },
     );
   }
 }

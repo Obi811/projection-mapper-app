@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/projection_service.dart';
-import '../models/control_point.dart';  // WICHTIGER IMPORT HINZUFÜGEN
+import '../models/control_point.dart';
 
 class ControlPanel extends StatelessWidget {
-  final ProjectionService service;
-  
-  const ControlPanel({super.key, required this.service});
+  const ControlPanel({super.key});
   
   @override
   Widget build(BuildContext context) {
+    final service = Provider.of<ProjectionService>(context);
+    
     return Container(
       color: Colors.grey[900],
       child: Column(
@@ -28,11 +29,11 @@ class ControlPanel extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildModeInfo(),
+                _buildModeInfo(service),
                 const SizedBox(height: 16),
-                _buildSurfaceInfo(),
+                _buildSurfaceInfo(service),
                 const SizedBox(height: 16),
-                _buildPointList(),
+                _buildPointList(service),
               ],
             ),
           ),
@@ -41,7 +42,7 @@ class ControlPanel extends StatelessWidget {
     );
   }
   
-  Widget _buildModeInfo() {
+  Widget _buildModeInfo(ProjectionService service) {
     final isMulti = service.multiProject != null;
     
     return Container(
@@ -78,11 +79,11 @@ class ControlPanel extends StatelessWidget {
     );
   }
   
-  Widget _buildSurfaceInfo() {
-    if (service.multiProject == null) return Container();
+  Widget _buildSurfaceInfo(ProjectionService service) {
+    if (service.multiProject == null) return const SizedBox.shrink();
     
     final surface = service.multiProject!.selectedSurface;
-    if (surface == null) return Container();
+    if (surface == null) return const SizedBox.shrink();
     
     return Container(
       padding: const EdgeInsets.all(12),
@@ -107,7 +108,7 @@ class ControlPanel extends StatelessWidget {
     );
   }
   
-  Widget _buildPointList() {
+  Widget _buildPointList(ProjectionService service) {
     final points = service.projection?.points ?? 
                   service.multiProject?.selectedSurface?.points ?? [];
     

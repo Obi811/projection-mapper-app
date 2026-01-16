@@ -1,5 +1,5 @@
 name: projection_mapper_app
-description: A professional projection mapper app for macOS
+description: Professional Projection Mapping App for macOS
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,13 +9,29 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  file_picker: ^6.1.1
+  
+  # Aktuelle Version von file_picker
+  file_picker: ^10.2.1  # Stabile Version für Flutter 3.0+
+  
+  # Image loading und Manipulation
+  image: ^4.0.17
   path_provider: ^2.1.1
+  path: ^1.8.3
+  
+  # JSON Serialisierung
+  json_annotation: ^4.8.1
+  
+  # State Management
+  provider: ^6.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/

@@ -1,11 +1,11 @@
+import 'dart:typed_data';  // DIESE ZEILE HINZUFÜGEN
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/projection_service.dart';
-import '../models/control_point.dart';  // WICHTIGER IMPORT HINZUFÜGEN
+import '../models/control_point.dart';
 
 class ProjectionCanvas extends StatefulWidget {
-  final ProjectionService service;
-  
-  const ProjectionCanvas({super.key, required this.service});
+  const ProjectionCanvas({super.key});
   
   @override
   _ProjectionCanvasState createState() => _ProjectionCanvasState();
@@ -17,21 +17,21 @@ class _ProjectionCanvasState extends State<ProjectionCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: widget.service,
-      builder: (context, child) {
-        final points = _getCurrentPoints();
-        final imagePath = _getCurrentImagePath();
+    return Consumer<ProjectionService>(
+      builder: (context, service, child) {
+        final points = service.currentPoints;
+        final imagePath = service.currentImagePath;
+        final imageBytes = service.getImageBytes(imagePath);
         
         return GestureDetector(
-          onPanDown: (details) => _handlePanDown(details, points),
-          onPanUpdate: (details) => _handlePanUpdate(details, points),
+          onPanDown: (details) => _handlePanDown(details, points, context),
+          onPanUpdate: (details) => _handlePanUpdate(details, points, context),
           onPanEnd: (details) => _handlePanEnd(),
           child: CustomPaint(
             size: Size.infinite,
             painter: _ProjectionCanvasPainter(
               points: points,
-              imagePath: imagePath,
+              imageBytes: imageBytes,
             ),
           ),
         );
@@ -39,23 +39,7 @@ class _ProjectionCanvasState extends State<ProjectionCanvas> {
     );
   }
 
-  List<ControlPoint> _getCurrentPoints() {
-    if (widget.service.multiProject != null) {
-      return widget.service.multiProject!.selectedSurface?.points ?? [];
-    } else {
-      return widget.service.projection?.points ?? [];
-    }
-  }
-
-  String? _getCurrentImagePath() {
-    if (widget.service.multiProject != null) {
-      return widget.service.multiProject!.selectedSurface?.imagePath;
-    } else {
-      return widget.service.projection?.imagePath;
-    }
-  }
-
-  void _handlePanDown(DragDownDetails details, List<ControlPoint> points) {
+  void _handlePanDown(DragDownDetails details, List<ControlPoint> points, BuildContext context) {
     final renderBox = context.findRenderObject() as RenderBox;
     final localPosition = renderBox.globalToLocal(details.globalPosition);
     final size = renderBox.size;
@@ -75,25 +59,26 @@ class _ProjectionCanvasState extends State<ProjectionCanvas> {
     }
   }
 
-  void _handlePanUpdate(DragUpdateDetails details, List<ControlPoint> points) {
+  void _handlePanUpdate(DragUpdateDetails details, List<ControlPoint> points, BuildContext context) {
     if (_draggingIndex == null) return;
     
     final renderBox = context.findRenderObject() as RenderBox;
     final localPosition = renderBox.globalToLocal(details.globalPosition);
     final size = renderBox.size;
     
-    setState(() {
-      final newX = (localPosition.dx / size.width).clamp(0.0, 1.0);
-      final newY = (localPosition.dy / size.height).clamp(0.0, 1.0);
-      
-      points[_draggingIndex!] = points[_draggingIndex!].copyWith(
-        x: newX,
-        y: newY,
-      );
-      
-      _updatePoints(points);
-      _draggingPoint = localPosition;
-    });
+    final newX = (localPosition.dx / size.width).clamp(0.0, 1.0);
+    final newY = (localPosition.dy / size.height).clamp(0.0, 1.0);
+    
+    final updatedPoints = List<ControlPoint>.from(points);
+    updatedPoints[_draggingIndex!] = updatedPoints[_draggingIndex!].copyWith(
+      x: newX,
+      y: newY,
+    );
+    
+    Provider.of<ProjectionService>(context, listen: false)
+        .updatePoints(updatedPoints);
+    
+    _draggingPoint = localPosition;
   }
 
   void _handlePanEnd() {
@@ -102,27 +87,25 @@ class _ProjectionCanvasState extends State<ProjectionCanvas> {
       _draggingPoint = null;
     });
   }
-
-  void _updatePoints(List<ControlPoint> points) {
-    widget.service.updatePoints(points);
-  }
 }
 
 class _ProjectionCanvasPainter extends CustomPainter {
   final List<ControlPoint> points;
-  final String? imagePath;
+  final Uint8List? imageBytes;
 
   _ProjectionCanvasPainter({
     required this.points,
-    this.imagePath,
+    this.imageBytes,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     _drawBackground(canvas, size);
-    if (imagePath != null) {
+    
+    if (imageBytes != null && imageBytes!.isNotEmpty) {
       _drawImage(canvas, size);
     }
+    
     _drawWireframe(canvas, size);
     _drawPoints(canvas, size);
   }
@@ -133,10 +116,62 @@ class _ProjectionCanvasPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     
     canvas.drawRect(Offset.zero & size, paint);
+    
+    // Grid für bessere Orientierung
+    final gridPaint = Paint()
+      ..color = Colors.grey[800]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5;
+    
+    final gridSize = 50.0;
+    for (var x = 0.0; x < size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (var y = 0.0; y < size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
   }
 
   void _drawImage(Canvas canvas, Size size) {
-    // Hier würde die Bild-Logik kommen
+    // Für jetzt: Einfaches Rechteck als Platzhalter
+    // Später: Tatsächliches Bild rendern
+    final imagePaint = Paint()
+      ..color = Colors.blue.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawRect(
+      Rect.fromPoints(
+        Offset(size.width * 0.1, size.height * 0.1),
+        Offset(size.width * 0.9, size.height * 0.9),
+      ),
+      imagePaint,
+    );
+    
+    final textStyle = TextStyle(
+      color: Colors.white.withOpacity(0.7),
+      fontSize: 16,
+      fontWeight: FontWeight.bold,
+    );
+    
+    final textSpan = TextSpan(
+      text: 'Image Loaded\n${imageBytes!.length ~/ 1024} KB',
+      style: textStyle,
+    );
+    
+    final textPainter = TextPainter(
+      text: textSpan,
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        (size.width - textPainter.width) / 2,
+        (size.height - textPainter.height) / 2,
+      ),
+    );
   }
 
   void _drawWireframe(Canvas canvas, Size size) {
@@ -179,11 +214,37 @@ class _ProjectionCanvasPainter extends CustomPainter {
         ..strokeWidth = 2;
       
       canvas.drawCircle(pointCenter, point.radius, borderPaint);
+      
+      // Punkt label
+      final textStyle = TextStyle(
+        color: Colors.black,
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+      );
+      
+      final textSpan = TextSpan(
+        text: point.label,
+        style: textStyle,
+      );
+      
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+      );
+      
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          pointCenter.dx - textPainter.width / 2,
+          pointCenter.dy - textPainter.height / 2,
+        ),
+      );
     }
   }
 
   @override
   bool shouldRepaint(_ProjectionCanvasPainter oldDelegate) {
-    return points != oldDelegate.points || imagePath != oldDelegate.imagePath;
+    return points != oldDelegate.points || imageBytes != oldDelegate.imageBytes;
   }
 }
