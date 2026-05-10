@@ -62,7 +62,8 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: '#0d0d0d',
     borderBottom: '1px solid #27272a',
     userSelect: 'none',
-    WebkitAppRegion: 'drag' as unknown as string, // Enable window dragging
+    // @ts-expect-error Electron-specific CSS property for window dragging
+    WebkitAppRegion: 'drag', // Enable window dragging
   },
   left: {
     display: 'flex',
@@ -102,7 +103,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
     cursor: 'pointer',
     transition: 'all 0.15s',
-    WebkitAppRegion: 'no-drag' as unknown as string,
+    // @ts-expect-error Electron-specific CSS property for window dragging
+    WebkitAppRegion: 'no-drag',
   },
   modeButtonActive: {
     backgroundColor: '#f59e0b',
@@ -118,7 +120,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     borderRadius: 6,
     fontSize: 16,
-    WebkitAppRegion: 'no-drag' as unknown as string,
+    // @ts-expect-error Electron-specific CSS property for window dragging
+    WebkitAppRegion: 'no-drag',
     transition: 'background-color 0.15s',
   },
 };

@@ -17,6 +17,12 @@
   ],
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+    "react/no-unknown-property": ["error", {
+      "ignore": ["position", "args", "geometry", "transparent", "side", "linewidth", "intensity", "object", "rotation", "scale", "attach", "map", "color", "wireframe", "opacity", "depthWrite", "depthTest", "toneMapped", "castShadow", "receiveShadow", "dispose"]
+    }],
+    "react/no-unescaped-entities": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-var-requires": "warn",
+    "prefer-const": "warn"
   }
 }

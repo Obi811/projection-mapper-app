@@ -30,3 +30,8 @@ coverage/
 
 # Electron
 out/
+
+
+# Playwright
+playwright-report/
+test-results/

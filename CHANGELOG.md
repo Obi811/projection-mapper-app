@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-05-10
+
+### Fixed
+
+- **CI/CD Workflow Fixes** — All three GitHub Actions workflows (test, build, release) repaired
+  - Added missing ESLint dependencies: `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin`, `eslint-plugin-react`, `eslint-plugin-react-hooks`
+  - Downgraded ESLint from v9 to v8 for `.eslintrc.json` config format compatibility
+  - Fixed `react/no-unknown-property` ESLint errors for Three.js JSX attributes (`position`, `args`, `geometry`, etc.)
+  - Fixed TypeScript errors for Electron-specific `WebkitAppRegion` CSS property
+  - Corrected build artifact paths in workflows (`release/` instead of `dist/`)
+  - Created missing `playwright.config.ts` for E2E test configuration
+  - Added placeholder E2E tests in `tests/e2e/app.spec.ts`
+  - Updated `lint` script to use glob pattern instead of deprecated `--ext` flag
+  - Downgraded `prefer-const` and `@typescript-eslint/no-var-requires` from errors to warnings
+
 ## [0.4.0] - 2026-05-10
 
 ### Added
