@@ -1,5 +1,10 @@
 # 🎯 Projection Mapper
 
+[![Tests](https://github.com/Obi811/projection-mapper-app/actions/workflows/test.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/test.yml)
+[![Build](https://github.com/Obi811/projection-mapper-app/actions/workflows/build.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/build.yml)
+[![Release](https://github.com/Obi811/projection-mapper-app/actions/workflows/release.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Professional projection mapping desktop application for Mac and Windows, built with **Electron**, **React**, **TypeScript**, and **Three.js**.
 
 ---
@@ -178,12 +183,115 @@ All API calls target **https://obitron.abacusai.app**:
 
 ---
 
+## CI/CD Pipeline
+
+This project uses **GitHub Actions** for continuous integration and delivery.
+
+### Workflows
+
+| Workflow | Trigger | Description |
+|----------|---------|-------------|
+| **Tests** | Push & PR to `main`/`develop` | Runs unit tests on Node 18.x & 20.x with coverage |
+| **Build** | Push to `main` & PR | Cross-platform builds (Mac, Windows, Linux) |
+| **Release** | Git tag `v*.*.*` | Full release with binaries on GitHub Releases |
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development (Electron + Vite HMR)
+npm run dev
+
+# Run unit tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Type checking
+npm run typecheck
+
+# Lint
+npm run lint
+
+# Build for production
+npm run build
+
+# Package for your platform
+npm run package:mac     # macOS (.dmg, .zip)
+npm run package:win     # Windows (.exe)
+npm run package:linux   # Linux (.AppImage, .deb)
+npm run package:all     # All platforms
+```
+
+### Release Process
+
+1. **Update version** in `package.json`:
+   ```bash
+   npm version patch   # 0.1.0 → 0.1.1
+   npm version minor   # 0.1.0 → 0.2.0
+   npm version major   # 0.1.0 → 1.0.0
+   ```
+
+2. **Update CHANGELOG.md** (automated):
+   ```bash
+   node scripts/update-changelog.js              # auto from package.json
+   node scripts/update-changelog.js --dry-run    # preview first
+   node scripts/update-changelog.js --version 0.2.0  # explicit version
+   ```
+
+3. **Commit & tag**:
+   ```bash
+   git add -A
+   git commit -m "chore: release v0.2.0"
+   git tag v0.2.0
+   git push origin main --tags
+   ```
+
+4. **GitHub Actions** will automatically:
+   - Run all tests
+   - Build for Mac, Windows, and Linux
+   - Create a GitHub Release with all binaries
+   - Attach the changelog section as release notes
+
+### Conventional Commits
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/) for automated changelog generation:
+
+| Prefix | Category | Example |
+|--------|----------|---------|
+| `feat:` | Added | `feat: add keystone correction` |
+| `fix:` | Fixed | `fix: resolve token refresh race condition` |
+| `docs:` | Documentation | `docs: update API reference` |
+| `refactor:` | Changed | `refactor: extract projection service` |
+| `perf:` | Performance | `perf: optimize WebGL render loop` |
+| `test:` | Testing | `test: add canvas unit tests` |
+| `ci:` | CI/CD | `ci: add Windows code signing` |
+| `chore:` | Maintenance | `chore: update dependencies` |
+| `feat!:` | Breaking | `feat!: change project file format` |
+
+### Code Signing
+
+> ⚠️ Builds are currently **unsigned**. To enable code signing, add the following repository secrets:
+
+| Secret | Platform | Description |
+|--------|----------|-------------|
+| `MAC_CERTIFICATE` | macOS | Base64-encoded `.p12` certificate |
+| `MAC_CERTIFICATE_PASSWORD` | macOS | Certificate password |
+| `WIN_CERTIFICATE` | Windows | Base64-encoded `.pfx` certificate |
+| `WIN_CERTIFICATE_PASSWORD` | Windows | Certificate password |
+
+---
+
 ## Contributing
 
 1. Create a feature branch: `git checkout -b feature/my-feature`
-2. Make your changes and add tests
-3. Run `npm test` to verify
-4. Submit a pull request
+2. Follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages
+3. Make your changes and add tests
+4. Run `npm test` to verify all tests pass
+5. Submit a pull request — CI will run tests and builds automatically
 
 ---
 

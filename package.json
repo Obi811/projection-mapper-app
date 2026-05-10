@@ -1,6 +1,6 @@
 {
   "name": "projection-mapper-app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Professional projection mapping desktop application for Mac and Windows",
   "main": "dist/main/index.js",
   "author": "Obi811",
@@ -23,7 +23,9 @@
     "package:mac": "electron-builder --mac",
     "package:win": "electron-builder --win",
     "package:linux": "electron-builder --linux",
-    "package:all": "electron-builder --mac --win --linux"
+    "package:all": "electron-builder --mac --win --linux",
+    "changelog": "node scripts/update-changelog.js",
+    "changelog:dry": "node scripts/update-changelog.js --dry-run"
   },
   "dependencies": {
     "@react-three/drei": "^9.115.0",
