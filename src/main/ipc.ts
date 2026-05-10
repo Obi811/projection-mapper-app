@@ -10,10 +10,11 @@
 
 import { ipcMain, app } from 'electron';
 import { IpcChannel } from '../shared/types';
-import type { ProjectorConfig } from '../shared/types';
+import type { ProjectorConfig, KeystoneCorners } from '../shared/types';
 import * as authService from '../services/auth-service';
 import * as licenseService from '../services/license-service';
 import * as outputManager from '../services/output-manager';
+import * as keystoneService from '../services/keystone-service';
 import {
   createProjectorWindow,
   closeProjectorWindow,
@@ -27,6 +28,10 @@ import {
   getFeatures,
   getProjectorConfigs,
   setProjectorConfigs,
+  getKeystoneConfigs,
+  setKeystoneConfigs,
+  getKeystonePresets,
+  setKeystonePresets,
 } from './store';
 
 /**
@@ -169,6 +174,75 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannel.PROJECTOR_GET_STATES, async () => {
     return outputManager.getStates();
   });
+
+  // ─── Keystone Correction ──────────────────────────────────────────────────
+
+  ipcMain.handle(
+    IpcChannel.KEYSTONE_GET_CONFIG,
+    async (_event, projectorId: string) => {
+      return keystoneService.getConfig(projectorId);
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.KEYSTONE_SAVE_CONFIG,
+    async (
+      _event,
+      projectorId: string,
+      update: { corners?: KeystoneCorners; meshSubdivisions?: number; enabled?: boolean; name?: string },
+    ) => {
+      const config = keystoneService.saveConfig(projectorId, update);
+      setKeystoneConfigs(keystoneService.getAllConfigs());
+      return config;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.KEYSTONE_DELETE_CONFIG,
+    async (_event, projectorId: string) => {
+      const deleted = keystoneService.deleteConfig(projectorId);
+      if (deleted) {
+        setKeystoneConfigs(keystoneService.getAllConfigs());
+      }
+      return deleted;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.KEYSTONE_GET_PRESETS,
+    async (_event, projectorId: string) => {
+      return keystoneService.getPresets(projectorId);
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.KEYSTONE_SAVE_PRESET,
+    async (_event, projectorId: string, name: string, corners: KeystoneCorners) => {
+      const preset = keystoneService.savePreset(projectorId, name, corners);
+      setKeystonePresets(keystoneService.getAllPresets());
+      return preset;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.KEYSTONE_DELETE_PRESET,
+    async (_event, presetId: string) => {
+      const deleted = keystoneService.deletePreset(presetId);
+      if (deleted) {
+        setKeystonePresets(keystoneService.getAllPresets());
+      }
+      return deleted;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.KEYSTONE_RESET,
+    async (_event, projectorId: string) => {
+      const config = keystoneService.resetConfig(projectorId);
+      setKeystoneConfigs(keystoneService.getAllConfigs());
+      return config;
+    },
+  );
 
   // ─── App ────────────────────────────────────────────────────────────────
 

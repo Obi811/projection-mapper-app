@@ -47,6 +47,15 @@ export const MAX_PROJECTORS = 16;
 export const PROJECTOR_WINDOW_MIN_WIDTH = 640;
 export const PROJECTOR_WINDOW_MIN_HEIGHT = 480;
 
+/** Keystone correction defaults */
+export const KEYSTONE_DEFAULT_SUBDIVISIONS = 8;
+export const KEYSTONE_MIN_SUBDIVISIONS = 1;
+export const KEYSTONE_MAX_SUBDIVISIONS = 32;
+export const KEYSTONE_SNAP_GRID_SIZE = 0.05; // 5% increments
+export const KEYSTONE_ARROW_STEP = 0.005; // 0.5% per arrow key press
+export const KEYSTONE_ARROW_STEP_FINE = 0.001; // 0.1% with Shift held
+export const MAX_KEYSTONE_PRESETS = 20;
+
 /** Electron Store keys */
 export const STORE_KEYS = {
   ACCESS_TOKEN: 'auth.accessToken',
@@ -57,4 +66,6 @@ export const STORE_KEYS = {
   FEATURES: 'license.features',
   WINDOW_BOUNDS: 'window.bounds',
   PROJECTOR_CONFIGS: 'projectors.configs',
+  KEYSTONE_CONFIGS: 'keystone.configs',
+  KEYSTONE_PRESETS: 'keystone.presets',
 } as const;

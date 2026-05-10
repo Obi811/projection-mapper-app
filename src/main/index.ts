@@ -16,8 +16,9 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { registerIpcHandlers } from './ipc';
-import { initStore, getProjectorConfigs } from './store';
+import { initStore, getProjectorConfigs, getKeystoneConfigs, getKeystonePresets } from './store';
 import { loadConfigs } from '../services/output-manager';
+import { loadConfigs as loadKeystoneConfigs, loadPresets as loadKeystonePresets } from '../services/keystone-service';
 import { closeAllProjectorWindows } from './projector-window';
 import {
   DEFAULT_WINDOW_WIDTH,
@@ -73,6 +74,16 @@ app.whenReady().then(() => {
   const savedConfigs = getProjectorConfigs();
   if (savedConfigs.length > 0) {
     loadConfigs(savedConfigs);
+  }
+
+  // Load persisted keystone configurations and presets
+  const savedKeystoneConfigs = getKeystoneConfigs();
+  if (savedKeystoneConfigs.length > 0) {
+    loadKeystoneConfigs(savedKeystoneConfigs);
+  }
+  const savedKeystonePresets = getKeystonePresets();
+  if (savedKeystonePresets.length > 0) {
+    loadKeystonePresets(savedKeystonePresets);
   }
 
   registerIpcHandlers();

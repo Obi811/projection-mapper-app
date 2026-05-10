@@ -13,7 +13,7 @@
 import Store from 'electron-store';
 import { v4 as uuidv4 } from 'uuid';
 import { STORE_KEYS } from '../shared/constants';
-import type { User, FeatureFlag, ProjectorConfig } from '../shared/types';
+import type { User, FeatureFlag, ProjectorConfig, KeystoneConfig, KeystonePreset } from '../shared/types';
 import { configureTokenHandlers } from '../services/api-client';
 
 interface StoreSchema {
@@ -30,6 +30,8 @@ interface StoreSchema {
     height: number;
   };
   [STORE_KEYS.PROJECTOR_CONFIGS]: ProjectorConfig[];
+  [STORE_KEYS.KEYSTONE_CONFIGS]: KeystoneConfig[];
+  [STORE_KEYS.KEYSTONE_PRESETS]: KeystonePreset[];
 }
 
 let store: Store<StoreSchema>;
@@ -50,6 +52,8 @@ export function initStore(): void {
       [STORE_KEYS.FEATURES]: [],
       [STORE_KEYS.WINDOW_BOUNDS]: { width: 1280, height: 800 },
       [STORE_KEYS.PROJECTOR_CONFIGS]: [],
+      [STORE_KEYS.KEYSTONE_CONFIGS]: [],
+      [STORE_KEYS.KEYSTONE_PRESETS]: [],
     },
   });
 
@@ -128,4 +132,22 @@ export function getProjectorConfigs(): ProjectorConfig[] {
 
 export function setProjectorConfigs(configs: ProjectorConfig[]): void {
   store.set(STORE_KEYS.PROJECTOR_CONFIGS, configs);
+}
+
+// ─── Keystone Config persistence ────────────────────────────────────────────
+
+export function getKeystoneConfigs(): KeystoneConfig[] {
+  return store.get(STORE_KEYS.KEYSTONE_CONFIGS) ?? [];
+}
+
+export function setKeystoneConfigs(configs: KeystoneConfig[]): void {
+  store.set(STORE_KEYS.KEYSTONE_CONFIGS, configs);
+}
+
+export function getKeystonePresets(): KeystonePreset[] {
+  return store.get(STORE_KEYS.KEYSTONE_PRESETS) ?? [];
+}
+
+export function setKeystonePresets(presets: KeystonePreset[]): void {
+  store.set(STORE_KEYS.KEYSTONE_PRESETS, presets);
 }
