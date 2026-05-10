@@ -1,253 +1,192 @@
-Projection Mapper for macOS
+# 🎯 Projection Mapper
 
-https://via.placeholder.com/800x450/2D3748/FFFFFF?text=Projection+Mapper+App
-A professional projection mapping application built with Flutter for macOS
+Professional projection mapping desktop application for Mac and Windows, built with **Electron**, **React**, **TypeScript**, and **Three.js**.
 
-🚀 Features
+---
 
-✅ Multi-Surface Projection Mapping
+## Features
 
-Create and manage multiple projection surfaces
-Real-time interactive canvas with draggable control points
-Surface visibility, opacity, and layer order control
-Duplicate, rename, and delete surfaces with ease
-✅ Professional Interface
+### Current (v0.1.0)
+- ✅ Electron desktop application with secure IPC architecture
+- ✅ React UI with dark theme optimized for projection work
+- ✅ Three.js WebGL canvas with text projection
+- ✅ Authentication service (email/password login & registration)
+- ✅ Social auth preparation (Google / Apple)
+- ✅ License validation with device-ID binding
+- ✅ Feature gating system (basic & premium tiers)
+- ✅ Addon marketplace API client
+- ✅ Automatic token refresh with request queuing
 
-Dark theme with Material Design 3
-Split-screen layout: Canvas + Control Panel
-Surface Manager Panel for multi-surface management
-Responsive design optimized for macOS
-✅ Data Management
+### Roadmap
+- 🔲 Keystone correction (corner-pin warping)
+- 🔲 Multi-surface projection (multi-projector support)
+- 🔲 Media import (images, videos, GIFs)
+- 🔲 Audio-reactive sync
+- 🔲 DMX lighting integration
+- 🔲 Addon runtime & marketplace UI
+- 🔲 Remote control (mobile companion)
+- 🔲 Project save/load (.pmp files)
+- 🔲 Fullscreen output mode (per-display)
 
-JSON project saving/loading
-CSV export for control point data
-Image caching system for performance
-Automatic project backups
-✅ Technical Excellence
+---
 
-Built with Flutter 3.0+ (100% Dart)
-No external plugin dependencies (pure native code)
-Provider pattern for state management
-Clean architecture with separation of concerns
-📸 Screenshots
+## Architecture
 
-Single Surface Mode	Multi-Surface Mode
-https://via.placeholder.com/400x250/4A5568/FFFFFF?text=Single+Surface	https://via.placeholder.com/400x250/4A5568/FFFFFF?text=Multi+Surface
-Surface Manager	Control Panel
-https://via.placeholder.com/400x250/4A5568/FFFFFF?text=Surface+Manager	https://via.placeholder.com/400x250/4A5568/FFFFFF?text=Control+Panel
-🛠️ Installation
+```
+projection-mapper-app/
+├── src/
+│   ├── main/                 # Electron Main Process
+│   │   ├── index.ts          # App entry, window creation, lifecycle
+│   │   ├── ipc.ts            # IPC handler registration (auth, license, device)
+│   │   ├── preload.ts        # Secure contextBridge (renderer ↔ main)
+│   │   └── store.ts          # Persistent storage (electron-store)
+│   │
+│   ├── renderer/             # React UI (Vite-bundled)
+│   │   ├── main.tsx          # React entry point
+│   │   ├── App.tsx           # Root component with routing
+│   │   ├── components/       # Reusable UI components
+│   │   │   ├── ProjectionCanvas.tsx   # Three.js WebGL canvas
+│   │   │   ├── Sidebar.tsx            # Control panel
+│   │   │   └── Toolbar.tsx            # Top navigation bar
+│   │   ├── hooks/            # Custom React hooks
+│   │   │   └── useFeatureGate.ts      # Feature flag checking
+│   │   ├── pages/            # Page-level components
+│   │   │   ├── LoginPage.tsx          # Auth screen
+│   │   │   └── ProjectionPage.tsx     # Main workspace
+│   │   └── styles/           # Global CSS
+│   │
+│   ├── services/             # API clients (shared between main & renderer)
+│   │   ├── api-client.ts     # Axios instance with auto token refresh
+│   │   ├── auth-service.ts   # Login, register, social auth, logout
+│   │   ├── license-service.ts # Validation, activation, feature gating
+│   │   └── addon-service.ts  # Marketplace API
+│   │
+│   └── shared/               # Shared types & constants
+│       ├── types/index.ts    # All TypeScript interfaces & enums
+│       └── constants/index.ts # API URLs, feature lists, store keys
+│
+├── tests/                    # Test suites
+│   ├── unit/                 # Vitest unit tests
+│   └── e2e/                  # Playwright E2E tests
+│
+├── public/                   # Static assets
+├── index.html                # Vite HTML entry
+├── vite.config.ts            # Vite config (renderer build)
+├── tsconfig.json             # Base TypeScript config
+├── tsconfig.main.json        # Main process TS config
+└── vitest.config.ts          # Test runner config
+```
 
-Prerequisites
+### Key Design Decisions
 
-Flutter 3.0 or higher
-macOS 10.15 (Catalina) or newer
-Xcode 14+ (for macOS development)
-Quick Start
+| Decision | Rationale |
+|----------|-----------|
+| **Electron + React** | Cross-platform desktop with rich UI, familiar web tooling |
+| **Vite** | Fast HMR, modern ESM, excellent DX |
+| **Three.js + R3F** | Industry-standard WebGL with React integration |
+| **Zustand** (prepared) | Lightweight state management, no boilerplate |
+| **electron-store** | Simple, typed persistent storage |
+| **Axios + interceptors** | Automatic token refresh, request queuing on 401 |
+| **contextBridge** | Secure IPC — no Node.js exposure in renderer |
 
-bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/projection-mapper-macos.git
-cd projection-mapper-macos
+### Security Model
 
-# Install dependencies
-flutter pub get
+- `contextIsolation: true` — renderer has no Node.js access
+- `nodeIntegration: false` — no `require()` in renderer
+- `sandbox: true` — OS-level sandboxing
+- CSP headers restrict network access to the Obitron API
+- Tokens stored in OS-level user config (not localStorage)
 
-# Run the application
-flutter run -d macos
-Build for Distribution
+---
 
-bash
-# Build for macOS
-flutter build macos
+## Setup & Development
 
-# The built app will be in:
-# build/macos/Build/Products/Release/
-📁 Project Structure
+### Prerequisites
+- **Node.js** ≥ 18
+- **npm** ≥ 9
 
-text
-projection-mapper-macos/
-├── lib/
-│   ├── models/           # Data models
-│   │   ├── control_point.dart
-│   │   ├── projection.dart
-│   │   └── multi_surface.dart
-│   ├── services/         # Business logic
-│   │   └── projection_service.dart
-│   └── ui/              # UI components
-│       ├── projection_canvas.dart
-│       ├── surface_manager_panel.dart
-│       ├── control_panel.dart
-│       └── image_loader.dart
-├── assets/              # Images and resources
-├── macos/               # macOS platform code
-└── pubspec.yaml         # Dependencies
-🎯 Usage Guide
+### Install
 
-1. Creating a New Project
+```bash
+git clone https://github.com/Obi811/projection-mapper-app.git
+cd projection-mapper-app
+npm install
+```
 
-Click the "New Project" button in the app
-Choose between Single Surface or Multi-Surface mode
-Name your project
-2. Working with Surfaces
+### Development
 
-Add Surface: Click the "+" button in the Surface Manager
-Select Surface: Click on any surface in the list
-Rename: Use the context menu (⋯) → Rename
-Duplicate: Create a copy with all control points
-Delete: Remove unwanted surfaces (cannot delete last surface)
-3. Adjusting Control Points
+```bash
+# Start both Electron main process and Vite dev server
+npm run dev
 
-Click and drag any control point on the canvas
-Points are automatically saved
-Wireframe shows the projection area
-4. Loading Images
+# Or start them separately:
+npm run dev:main      # Compile main process (watch mode)
+npm run dev:renderer  # Start Vite dev server (port 5173)
+npm start             # Launch Electron (after build:main)
+```
 
-Click the image icon in the toolbar
-Select an image file (JPG, PNG, BMP, GIF)
-The image will be mapped to the control points
-5. Exporting Data
+### Testing
 
-JSON Export: Full project data (recommended for saving)
-CSV Export: Control point coordinates only (for external use)
-🔧 Development
+```bash
+npm test              # Run all unit tests
+npm run test:watch    # Watch mode
+npm run test:e2e      # E2E tests (Playwright)
+```
 
-Adding New Features
+### Build & Package
 
-The codebase is modular and easy to extend:
+```bash
+npm run build         # Build main + renderer
+npm run package:mac   # Package for macOS (.dmg)
+npm run package:win   # Package for Windows (.exe)
+npm run package:all   # Package for all platforms
+```
 
-dart
-// Example: Adding a new surface property
-class ProjectionSurface {
-  // Existing properties...
-  String blendMode; // New property
-  
-  // Update toJson/fromJson methods
-  // Add UI controls in surface_manager_panel.dart
-}
-Architecture
+---
 
-The app follows the MVVM pattern with Provider:
+## API Integration
 
-Models: Pure data classes with JSON serialization
-Services: Business logic and state management
-UI: Stateless/Stateful widgets that listen to the service
-Dependencies
+All API calls target **https://obitron.abacusai.app**:
 
-yaml
-dependencies:
-  flutter: # Core Flutter framework
-  provider: ^6.1.1 # State management
-  image: ^4.0.17 # Image processing
-  # No external projection mapping plugins - pure Dart code
-📈 Roadmap
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/auth/register` | POST | Create account |
+| `/auth/login` | POST | Email/password login |
+| `/auth/refresh` | POST | Refresh access token |
+| `/auth/social` | POST | Google/Apple OAuth |
+| `/licenses/validate` | POST | Validate license + device |
+| `/licenses/activate` | POST | Activate license on device |
+| `/addons` | GET | List marketplace addons |
+| `/addons/my` | GET | User's purchased addons |
+| `/addons/:id/purchase` | POST | Purchase addon |
+| `/addons/check/:slug` | GET | Check addon ownership |
 
-Phase 1: Complete ✅
+### Feature Flags
 
-Basic projection mapping with 4+ control points
-Multi-surface management system
-JSON/CSV export functionality
-Professional macOS UI
-Phase 2: In Progress 🔄
+| Flag | Tier | Description |
+|------|------|-------------|
+| `basic_projection` | Basic | Core projection rendering |
+| `text_overlay` | Basic | Text overlays on surfaces |
+| `media_import` | Basic | Image/video import |
+| `gif_support` | Basic | Animated GIF support |
+| `multi_surface` | Premium | Multiple projection surfaces |
+| `keystone_correction` | Premium | Corner-pin warping |
+| `audio_sync` | Premium | Audio-reactive effects |
+| `dmx_support` | Premium | DMX lighting control |
+| `addon_system` | Premium | Install marketplace addons |
+| `remote_control` | Premium | Mobile companion control |
 
-Real image loading with file picker
-Image preview on canvas
-Enhanced export formats
-Undo/Redo system
-Phase 3: Planned 📅
+---
 
-Video/GIF animation support
-OSC/Art-Net protocol integration
-Advanced calibration tools (grid, edge detection)
-Cross-platform support (Windows, Linux, iOS)
-🤝 Contributing
+## Contributing
 
-We welcome contributions! Here's how to help:
+1. Create a feature branch: `git checkout -b feature/my-feature`
+2. Make your changes and add tests
+3. Run `npm test` to verify
+4. Submit a pull request
 
-Fork the repository
-Create a feature branch
-bash
-git checkout -b feature/amazing-feature
-Commit your changes
-bash
-git commit -m 'Add some amazing feature'
-Push to the branch
-bash
-git push origin feature/amazing-feature
-Open a Pull Request
-Development Guidelines
+---
 
-Follow Dart/Flutter best practices
-Add tests for new functionality
-Update documentation accordingly
-Use descriptive commit messages
-🐛 Troubleshooting
+## License
 
-Common Issues
-
-File picker doesn't work on macOS:
-
-bash
-# Ensure proper entitlements
-open macos/Runner.xcworkspace
-# Enable App Sandbox with file access permissions
-App crashes when loading large images:
-
-The app includes an image cache system
-Large images are automatically optimized
-Check console for memory warnings
-Control points not draggable:
-
-Ensure you're in edit mode
-Check that no surface is locked
-Verify the canvas has focus
-Debugging
-
-bash
-# Run with verbose logging
-flutter run -d macos --verbose
-
-# Check Flutter doctor
-flutter doctor -v
-📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-🙏 Acknowledgments
-
-Flutter Team for the amazing cross-platform framework
-Material Design for the beautiful UI components
-Open Source Community for inspiration and tools
-📞 Support
-
-Issues: GitHub Issues
-Discussions: GitHub Discussions
-Email: your-email@example.com
-🏆 Project Status
-
-Current Version: 1.0.0 (Multi-Surface MVP)
-Stability: Production Ready ✅
-Platform: macOS (expandable to iOS/Android/Windows/Linux)
-Last Updated: $(date)
-
-<div align="center"> <p>Built with ❤️ using Flutter</p> <p>⭐ Star this repo if you find it useful!</p> </div>
-🔄 Update Instructions
-
-Latest Changes (v1.0.0)
-
-Complete multi-surface management system
-Professional dark theme interface
-JSON project serialization
-Performance optimizations with image caching
-Upgrading from Previous Versions
-
-bash
-# Pull latest changes
-git pull origin main
-
-# Update dependencies
-flutter pub get
-
-# Clean build
-flutter clean
-flutter run -d macos
-Happy Projection Mapping! 🎬✨
+MIT © Obi811
