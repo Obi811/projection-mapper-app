@@ -1,0 +1,53 @@
+/**
+ * Application-wide constants.
+ *
+ * Centralised here so every layer (main, renderer, services)
+ * can import the same values without duplication.
+ */
+
+/** Base URL of the Obitron licensing / auth API */
+export const API_BASE_URL = 'https://obitron.abacusai.app';
+
+/** Current application version — kept in sync with package.json via build step */
+export const APP_VERSION = '0.1.0';
+
+/** Application name used in window titles, about dialogs, etc. */
+export const APP_NAME = 'Projection Mapper';
+
+/** Default window dimensions */
+export const DEFAULT_WINDOW_WIDTH = 1280;
+export const DEFAULT_WINDOW_HEIGHT = 800;
+export const MIN_WINDOW_WIDTH = 960;
+export const MIN_WINDOW_HEIGHT = 600;
+
+/**
+ * Feature sets by tier — used as fallback when the API is unreachable.
+ * The canonical source of truth is always the server response.
+ */
+export const BASIC_FEATURES = [
+  'basic_projection',
+  'text_overlay',
+  'media_import',
+  'gif_support',
+] as const;
+
+export const PREMIUM_FEATURES = [
+  ...BASIC_FEATURES,
+  'multi_surface',
+  'keystone_correction',
+  'audio_sync',
+  'dmx_support',
+  'addon_system',
+  'remote_control',
+] as const;
+
+/** Electron Store keys */
+export const STORE_KEYS = {
+  ACCESS_TOKEN: 'auth.accessToken',
+  REFRESH_TOKEN: 'auth.refreshToken',
+  USER: 'auth.user',
+  DEVICE_ID: 'device.id',
+  LICENSE_KEY: 'license.key',
+  FEATURES: 'license.features',
+  WINDOW_BOUNDS: 'window.bounds',
+} as const;
