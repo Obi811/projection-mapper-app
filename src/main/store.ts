@@ -13,7 +13,7 @@
 import Store from 'electron-store';
 import { v4 as uuidv4 } from 'uuid';
 import { STORE_KEYS } from '../shared/constants';
-import type { User, FeatureFlag } from '../shared/types';
+import type { User, FeatureFlag, ProjectorConfig } from '../shared/types';
 import { configureTokenHandlers } from '../services/api-client';
 
 interface StoreSchema {
@@ -29,6 +29,7 @@ interface StoreSchema {
     width: number;
     height: number;
   };
+  [STORE_KEYS.PROJECTOR_CONFIGS]: ProjectorConfig[];
 }
 
 let store: Store<StoreSchema>;
@@ -48,6 +49,7 @@ export function initStore(): void {
       [STORE_KEYS.LICENSE_KEY]: null,
       [STORE_KEYS.FEATURES]: [],
       [STORE_KEYS.WINDOW_BOUNDS]: { width: 1280, height: 800 },
+      [STORE_KEYS.PROJECTOR_CONFIGS]: [],
     },
   });
 
@@ -116,4 +118,14 @@ export function getLicenseKey(): string | null {
 
 export function getFeatures(): FeatureFlag[] {
   return store.get(STORE_KEYS.FEATURES);
+}
+
+// ─── Projector Config persistence ───────────────────────────────────────────
+
+export function getProjectorConfigs(): ProjectorConfig[] {
+  return store.get(STORE_KEYS.PROJECTOR_CONFIGS) ?? [];
+}
+
+export function setProjectorConfigs(configs: ProjectorConfig[]): void {
+  store.set(STORE_KEYS.PROJECTOR_CONFIGS, configs);
 }

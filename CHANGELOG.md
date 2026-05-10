@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-05-10
+
+### Added
+- **Multi-Projector Support**: Drive 2–16 projector outputs simultaneously from a single workstation
+- **Output Manager Service** (`src/services/output-manager.ts`): Display enumeration via Electron screen API, projector configuration CRUD, runtime state tracking
+- **Surface Manager Service** (`src/services/surface-manager.ts`): Surface-to-projector assignment, render data aggregation, frame-accurate sync clock
+- **Projector Window Manager** (`src/main/projector-window.ts`): Dedicated BrowserWindow per projector, fullscreen mode, display-aware positioning, IPC communication
+- **Projector Setup Dialog**: Scan connected displays, configure projector name/resolution/fullscreen, edit/delete configurations
+- **Projector Manager Panel**: List projectors with status indicators, preview thumbnails, start/stop controls, premium feature badge
+- **Projector Preview Component**: Canvas-based thumbnail previews showing surface assignments and active status per projector
+- **Feature-Gating Integration**: `multi_surface` premium feature check with upgrade prompt in sidebar
+- **IPC Channels**: 9 new IPC channels for projector management (`projector:getDisplays`, `projector:saveConfig`, `projector:openWindow`, etc.)
+- **Persistent Configuration**: Projector configs saved/loaded via electron-store (`projectors.configs` key)
+- **Shared Types**: `DisplayInfo`, `ProjectorConfig`, `ProjectorState`, `SurfaceAssignment` interfaces
+- **Unit Tests**: 32 new tests for output-manager and surface-manager services (100% pass rate)
+- **Documentation**: Multi-projector setup guide (`docs/multi-projector-setup.md`)
+
+### Changed
+- Updated Sidebar to integrate Projector Manager Panel with feature-gated display
+- Extended IpcChannel enum with projector management channels
+- Extended electron-store schema with projector configurations
+- Updated constants with multi-projector limits (MAX_PROJECTORS=16)
+- Updated preload script with projector API bridge
+
 ## [0.2.0] - 2026-05-10
 
 ### Added
@@ -24,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Conventional Commits reference table
 - Code signing setup instructions
 - Local development commands reference
+
 
 ## [0.1.0] - 2026-05-10
 

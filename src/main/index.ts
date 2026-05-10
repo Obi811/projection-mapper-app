@@ -16,7 +16,9 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { registerIpcHandlers } from './ipc';
-import { initStore } from './store';
+import { initStore, getProjectorConfigs } from './store';
+import { loadConfigs } from '../services/output-manager';
+import { closeAllProjectorWindows } from './projector-window';
 import {
   DEFAULT_WINDOW_WIDTH,
   DEFAULT_WINDOW_HEIGHT,
@@ -66,6 +68,13 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   initStore();
+
+  // Load persisted projector configurations
+  const savedConfigs = getProjectorConfigs();
+  if (savedConfigs.length > 0) {
+    loadConfigs(savedConfigs);
+  }
+
   registerIpcHandlers();
   createWindow();
 
@@ -75,6 +84,11 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+// Close all projector windows before quitting
+app.on('before-quit', () => {
+  closeAllProjectorWindows();
 });
 
 // Quit when all windows are closed (except macOS)

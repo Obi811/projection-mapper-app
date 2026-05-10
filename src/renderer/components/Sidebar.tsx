@@ -11,6 +11,8 @@
  */
 
 import React from 'react';
+import { ProjectorManagerPanel } from './ProjectorManagerPanel';
+import { useFeatureGate } from '../hooks/useFeatureGate';
 
 interface SidebarProps {
   overlayText: string;
@@ -29,6 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   textColor,
   onTextColorChange,
 }) => {
+  const { hasFeature } = useFeatureGate();
+
   return (
     <aside style={styles.sidebar}>
       {/* Section: Text Overlay */}
@@ -72,14 +76,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </label>
       </div>
 
-      {/* Section: Projection Surface — placeholder */}
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Surface</h3>
-        <p style={styles.placeholder}>
-          Surface controls will appear here when multi-surface projection is
-          enabled.
-        </p>
-      </div>
+      {/* Section: Projector Management */}
+      <ProjectorManagerPanel
+        featureEnabled={hasFeature('multi_surface')}
+        onUpgradePrompt={() => {
+          // TODO: Open license upgrade dialog or redirect
+        }}
+      />
 
       {/* Section: License Info */}
       <div style={{ ...styles.section, marginTop: 'auto' }}>

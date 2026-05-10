@@ -41,6 +41,12 @@ export const PREMIUM_FEATURES = [
   'remote_control',
 ] as const;
 
+/** Multi-Projector limits */
+export const MIN_PROJECTORS = 2;
+export const MAX_PROJECTORS = 16;
+export const PROJECTOR_WINDOW_MIN_WIDTH = 640;
+export const PROJECTOR_WINDOW_MIN_HEIGHT = 480;
+
 /** Electron Store keys */
 export const STORE_KEYS = {
   ACCESS_TOKEN: 'auth.accessToken',
@@ -50,4 +56,5 @@ export const STORE_KEYS = {
   LICENSE_KEY: 'license.key',
   FEATURES: 'license.features',
   WINDOW_BOUNDS: 'window.bounds',
+  PROJECTOR_CONFIGS: 'projectors.configs',
 } as const;
