@@ -53,9 +53,10 @@ jobs:
         with:
           name: build-${{ matrix.platform }}
           path: |
-            dist/*.dmg
-            dist/*.exe
-            dist/*.AppImage
-            dist/*.deb
-            dist/*.snap
+            release/*.dmg
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+            release/*.snap
+            release/*.zip
           retention-days: 14
