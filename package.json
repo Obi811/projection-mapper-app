@@ -3,7 +3,10 @@
   "version": "0.4.0",
   "description": "Professional projection mapping desktop application for Mac and Windows",
   "main": "dist/main/index.js",
-  "author": "Obi811",
+  "author": {
+    "name": "Obi811",
+    "email": "obi811@users.noreply.github.com"
+  },
   "license": "MIT",
   "private": true,
   "scripts": {

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed Node.js 18 from test matrix (jsdom v29 requires Node 20+, Electron 33 uses Node 20+)
   - Fixed `electron-builder` artifact output paths in `build.yml` and `release.yml` (`release/` instead of `dist/`)
   - Fixed `tsconfig.main.json` rootDir mismatch — changed from `src/main` to `src` so `src/shared/` and `src/services/` compile correctly
+  - Added author email in `package.json` for Linux `.deb` package maintainer field (electron-builder requirement)
 
 ## [0.4.0] - 2026-05-10
 
