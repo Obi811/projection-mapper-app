@@ -184,6 +184,49 @@ export interface SurfaceAssignment {
   layer: number;
 }
 
+// ─── Keystone Correction ─────────────────────────────────────────────────────
+
+/** Corner positions for keystone correction [topLeft, topRight, bottomRight, bottomLeft] */
+export type KeystoneCorners = [Point2D, Point2D, Point2D, Point2D];
+
+/** Default (identity) keystone corners — normalised 0..1 */
+export const DEFAULT_KEYSTONE_CORNERS: KeystoneCorners = [
+  { x: 0, y: 1 },   // topLeft
+  { x: 1, y: 1 },   // topRight
+  { x: 1, y: 0 },   // bottomRight
+  { x: 0, y: 0 },   // bottomLeft
+];
+
+/** Keystone configuration for a single projector */
+export interface KeystoneConfig {
+  id: string;
+  projectorId: string;
+  name: string;
+  corners: KeystoneCorners;
+  /** Mesh subdivision for smooth deformation (higher = more accurate) */
+  meshSubdivisions: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A saved keystone preset */
+export interface KeystonePreset {
+  id: string;
+  name: string;
+  projectorId: string;
+  corners: KeystoneCorners;
+  createdAt: string;
+}
+
+/** 4x4 transformation matrix as flat array (column-major, Three.js format) */
+export type TransformMatrix4 = [
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number,
+];
+
 // ─── IPC (Main ↔ Renderer) ──────────────────────────────────────────────────
 
 /** Channel names for Electron IPC communication */
@@ -213,6 +256,15 @@ export enum IpcChannel {
   PROJECTOR_GET_STATES = 'projector:getStates',
   PROJECTOR_UPDATE_CONTENT = 'projector:updateContent',
   PROJECTOR_SCAN_DISPLAYS = 'projector:scanDisplays',
+
+  // Keystone Correction
+  KEYSTONE_GET_CONFIG = 'keystone:getConfig',
+  KEYSTONE_SAVE_CONFIG = 'keystone:saveConfig',
+  KEYSTONE_DELETE_CONFIG = 'keystone:deleteConfig',
+  KEYSTONE_GET_PRESETS = 'keystone:getPresets',
+  KEYSTONE_SAVE_PRESET = 'keystone:savePreset',
+  KEYSTONE_DELETE_PRESET = 'keystone:deletePreset',
+  KEYSTONE_RESET = 'keystone:reset',
 
   // App
   APP_GET_VERSION = 'app:getVersion',

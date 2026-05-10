@@ -20,6 +20,9 @@ import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Text, Grid, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
+import type { KeystoneCorners } from '../../shared/types';
+import { DEFAULT_KEYSTONE_CORNERS } from '../../shared/types';
+import { KeystoneMesh } from './KeystoneMesh';
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -27,6 +30,12 @@ interface ProjectionCanvasProps {
   text: string;
   fontSize: number;
   textColor: string;
+  /** Keystone correction corners */
+  keystoneCorners?: KeystoneCorners;
+  /** Whether keystone correction is enabled */
+  keystoneEnabled?: boolean;
+  /** Mesh subdivisions for keystone deformation */
+  keystoneSubdivisions?: number;
 }
 
 // ─── Inner Scene Components ─────────────────────────────────────────────────
@@ -69,9 +78,29 @@ const TextOverlay: React.FC<{
 
 /**
  * A projection surface rectangle — represents the physical projection area.
- * Will be extended with corner-pin / keystone controls.
+ * When keystone correction is enabled, uses KeystoneMesh for deformation.
+ * Falls back to a simple PlaneGeometry when keystone is identity/disabled.
  */
-const ProjectionSurface: React.FC = () => {
+const ProjectionSurface: React.FC<{
+  keystoneCorners?: KeystoneCorners;
+  keystoneEnabled?: boolean;
+  keystoneSubdivisions?: number;
+}> = ({
+  keystoneCorners = DEFAULT_KEYSTONE_CORNERS,
+  keystoneEnabled = false,
+  keystoneSubdivisions = 8,
+}) => {
+  if (keystoneEnabled) {
+    return (
+      <KeystoneMesh
+        corners={keystoneCorners}
+        subdivisions={keystoneSubdivisions}
+        enabled={keystoneEnabled}
+      />
+    );
+  }
+
+  // Default: simple plane
   return (
     <mesh position={[0, 0, -0.01]}>
       <planeGeometry args={[8, 4.5]} />
@@ -98,6 +127,9 @@ export const ProjectionCanvas: React.FC<ProjectionCanvasProps> = ({
   text,
   fontSize,
   textColor,
+  keystoneCorners,
+  keystoneEnabled = false,
+  keystoneSubdivisions = 8,
 }) => {
   return (
     <Canvas
@@ -128,8 +160,12 @@ export const ProjectionCanvas: React.FC<ProjectionCanvasProps> = ({
         sectionSize={2}
       />
 
-      {/* Projection surface */}
-      <ProjectionSurface />
+      {/* Projection surface (with optional keystone deformation) */}
+      <ProjectionSurface
+        keystoneCorners={keystoneCorners}
+        keystoneEnabled={keystoneEnabled}
+        keystoneSubdivisions={keystoneSubdivisions}
+      />
 
       {/* Text overlay */}
       <TextOverlay text={text} fontSize={fontSize} color={textColor} />

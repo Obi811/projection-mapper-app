@@ -12,7 +12,9 @@
 
 import React from 'react';
 import { ProjectorManagerPanel } from './ProjectorManagerPanel';
+import { KeystonePanel } from './KeystonePanel';
 import { useFeatureGate } from '../hooks/useFeatureGate';
+import type { KeystoneCorners, KeystoneConfig } from '../../shared/types';
 
 interface SidebarProps {
   overlayText: string;
@@ -21,6 +23,17 @@ interface SidebarProps {
   onFontSizeChange: (size: number) => void;
   textColor: string;
   onTextColorChange: (color: string) => void;
+  // Keystone props
+  keystoneConfig: KeystoneConfig | null;
+  keystoneProjectorId: string;
+  onKeystoneCornersChange: (corners: KeystoneCorners) => void;
+  onKeystoneEnabledChange: (enabled: boolean) => void;
+  onKeystoneReset: () => void;
+  onKeystoneSubdivisionsChange: (subdivisions: number) => void;
+  keystoneSnapEnabled: boolean;
+  onKeystoneSnapToggle: () => void;
+  keystoneEditMode: boolean;
+  onKeystoneEditModeChange: (active: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -30,6 +43,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onFontSizeChange,
   textColor,
   onTextColorChange,
+  keystoneConfig,
+  keystoneProjectorId,
+  onKeystoneCornersChange,
+  onKeystoneEnabledChange,
+  onKeystoneReset,
+  onKeystoneSubdivisionsChange,
+  keystoneSnapEnabled,
+  onKeystoneSnapToggle,
+  keystoneEditMode,
+  onKeystoneEditModeChange,
 }) => {
   const { hasFeature } = useFeatureGate();
 
@@ -75,6 +98,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </label>
       </div>
+
+      {/* Section: Keystone Correction */}
+      <KeystonePanel
+        projectorId={keystoneProjectorId}
+        config={keystoneConfig}
+        featureEnabled={hasFeature('keystone_correction')}
+        onCornersChange={onKeystoneCornersChange}
+        onEnabledChange={onKeystoneEnabledChange}
+        onReset={onKeystoneReset}
+        onSubdivisionsChange={onKeystoneSubdivisionsChange}
+        snapEnabled={keystoneSnapEnabled}
+        onSnapToggle={onKeystoneSnapToggle}
+        onEditModeChange={onKeystoneEditModeChange}
+        editModeActive={keystoneEditMode}
+        onUpgradePrompt={() => {
+          // TODO: Open license upgrade dialog or redirect
+        }}
+      />
 
       {/* Section: Projector Management */}
       <ProjectorManagerPanel

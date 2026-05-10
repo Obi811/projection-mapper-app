@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-10
+
+### Added
+
+- **Keystone Correction System** — 4-point perspective correction for projection alignment
+  - **Keystone Engine** (`src/services/keystone-engine.ts`): Pure math algorithms
+    - Perspective transformation matrix (DLT homography)
+    - Bilinear mesh deformation for Three.js BufferGeometry
+    - 3×3 → 4×4 matrix conversion for Three.js integration
+    - Utility functions: identity check, clamping, snap-to-grid, area calculation, validation
+  - **Keystone Service** (`src/services/keystone-service.ts`): Config & preset management
+    - Per-projector keystone configurations (1:1 mapping)
+    - Preset save/load/delete (up to 20 per projector)
+    - Reset to default function
+    - In-memory state with electron-store persistence
+  - **KeystoneMesh** (`src/renderer/components/KeystoneMesh.tsx`): Three.js deformable mesh
+    - Subdivided PlaneGeometry with real-time vertex deformation
+    - UV-correct rendering for texture mapping
+    - Visual border indicator (amber when deformed)
+  - **CornerHandles** (`src/renderer/components/CornerHandles.tsx`): Interactive overlay
+    - Mouse drag for corner adjustment
+    - Keyboard arrow keys (0.5% step, Shift for 0.1% fine adjustment)
+    - Tab key to cycle corners, Escape to deselect
+    - Snap-to-grid (5% increments, toggleable)
+    - SVG guide lines with diagonals
+  - **KeystonePanel** (`src/renderer/components/KeystonePanel.tsx`): Sidebar controls
+    - Enable/disable toggle
+    - Numeric input for precise corner values (0.000–1.000)
+    - Mesh quality slider (1–32 subdivisions)
+    - Preset management UI (save/load/delete)
+    - Keyboard shortcut reference
+  - **Feature-Gating**: `keystone_correction` premium feature check with upgrade prompt
+  - **IPC Channels**: 7 new channels for keystone operations
+    - `keystone:getConfig`, `keystone:saveConfig`, `keystone:deleteConfig`
+    - `keystone:getPresets`, `keystone:savePreset`, `keystone:deletePreset`
+    - `keystone:reset`
+  - **Persistent Storage**: Keystone configs and presets saved via electron-store
+    - `keystone.configs` and `keystone.presets` store keys
+  - **Unit Tests**: 55 new tests (29 engine + 26 service)
+  - **Documentation**: Keystone correction setup guide (`docs/keystone-correction.md`)
+
+### Changed
+
+- **Toolbar**: Added Keystone mode toggle button (◇ Keystone), updated version to v0.4.0
+- **ProjectionCanvas**: Accepts keystone props; conditionally renders KeystoneMesh or default plane
+- **ProjectionPage**: Manages keystone state, canvas size observation, and CornerHandle overlay
+- **Sidebar**: Integrated KeystonePanel with feature-gated `keystone_correction` check
+- **Shared Types**: Added `KeystoneConfig`, `KeystonePreset`, `KeystoneCorners`, `TransformMatrix4`
+- **IpcChannel Enum**: Extended with 7 keystone channels
+- **Constants**: Added keystone defaults (subdivisions, snap grid, arrow steps, max presets)
+- **electron-store Schema**: Added `keystone.configs` and `keystone.presets`
+- **Preload Script**: Added `keystone` API namespace with 7 IPC methods
+- **Main Process**: Loads keystone configs and presets on startup
+
 ## [0.3.0] - 2026-05-10
 
 ### Added

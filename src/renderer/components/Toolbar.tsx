@@ -7,17 +7,37 @@
 
 import React from 'react';
 
-export const Toolbar: React.FC = () => {
+interface ToolbarProps {
+  /** Whether keystone edit mode is currently active */
+  keystoneEditMode?: boolean;
+  /** Toggle keystone edit mode */
+  onKeystoneToggle?: () => void;
+}
+
+export const Toolbar: React.FC<ToolbarProps> = ({
+  keystoneEditMode = false,
+  onKeystoneToggle,
+}) => {
   return (
     <div style={styles.toolbar}>
       <div style={styles.left}>
         <span style={styles.logo}>🎯</span>
         <span style={styles.title}>Projection Mapper</span>
-        <span style={styles.version}>v0.1.0</span>
+        <span style={styles.version}>v0.4.0</span>
       </div>
 
       <div style={styles.center}>
-        {/* Future: view mode toggles (Edit / Preview / Output) */}
+        {/* Keystone mode toggle */}
+        <button
+          style={{
+            ...styles.modeButton,
+            ...(keystoneEditMode ? styles.modeButtonActive : {}),
+          }}
+          onClick={onKeystoneToggle}
+          title="Toggle Keystone Correction Edit Mode (K)"
+        >
+          ◇ Keystone
+        </button>
       </div>
 
       <div style={styles.right}>
@@ -71,6 +91,24 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 4,
+  },
+  modeButton: {
+    padding: '4px 12px',
+    borderRadius: 6,
+    border: '1px solid #27272a',
+    backgroundColor: 'transparent',
+    color: '#a1a1aa',
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+    WebkitAppRegion: 'no-drag' as unknown as string,
+  },
+  modeButtonActive: {
+    backgroundColor: '#f59e0b',
+    borderColor: '#f59e0b',
+    color: '#000000',
+    fontWeight: 600,
   },
   iconButton: {
     width: 32,

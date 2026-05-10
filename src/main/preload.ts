@@ -73,6 +73,24 @@ const electronAPI = {
     },
   },
 
+  // ─── Keystone Correction ────────────────────────────────────────────────
+  keystone: {
+    getConfig: (projectorId: string) =>
+      ipcRenderer.invoke(IpcChannel.KEYSTONE_GET_CONFIG, projectorId),
+    saveConfig: (projectorId: string, update: Record<string, unknown>) =>
+      ipcRenderer.invoke(IpcChannel.KEYSTONE_SAVE_CONFIG, projectorId, update),
+    deleteConfig: (projectorId: string) =>
+      ipcRenderer.invoke(IpcChannel.KEYSTONE_DELETE_CONFIG, projectorId),
+    getPresets: (projectorId: string) =>
+      ipcRenderer.invoke(IpcChannel.KEYSTONE_GET_PRESETS, projectorId),
+    savePreset: (projectorId: string, name: string, corners: unknown) =>
+      ipcRenderer.invoke(IpcChannel.KEYSTONE_SAVE_PRESET, projectorId, name, corners),
+    deletePreset: (presetId: string) =>
+      ipcRenderer.invoke(IpcChannel.KEYSTONE_DELETE_PRESET, presetId),
+    reset: (projectorId: string) =>
+      ipcRenderer.invoke(IpcChannel.KEYSTONE_RESET, projectorId),
+  },
+
   // ─── App ──────────────────────────────────────────────────────────────
   app: {
     getVersion: () => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),
