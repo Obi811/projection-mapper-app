@@ -23,7 +23,9 @@
     "package:mac": "electron-builder --mac",
     "package:win": "electron-builder --win",
     "package:linux": "electron-builder --linux",
-    "package:all": "electron-builder --mac --win --linux"
+    "package:all": "electron-builder --mac --win --linux",
+    "changelog": "node scripts/update-changelog.js",
+    "changelog:dry": "node scripts/update-changelog.js --dry-run"
   },
   "dependencies": {
     "@react-three/drei": "^9.115.0",

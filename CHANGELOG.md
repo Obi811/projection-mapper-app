@@ -83,6 +83,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated constants with multi-projector limits (MAX_PROJECTORS=16)
 - Updated preload script with projector API bridge
 
+## [0.2.0] - 2026-05-10
+
+### Added
+- **CI/CD Pipeline**: GitHub Actions workflows for testing, building, and releasing
+  - Test workflow: runs on Node 18.x & 20.x with coverage reporting
+  - Build workflow: cross-platform matrix builds (Mac, Windows, Linux)
+  - Release workflow: automated GitHub Releases on version tags (v*.*.*)
+- **CHANGELOG Automation**: Scripts for automatic changelog generation from Conventional Commits
+  - `scripts/update-changelog.js` — generate changelog from git history
+  - `scripts/extract-changelog.js` — extract version-specific notes for releases
+- **Code Signing Preparation**: Placeholder configuration for macOS and Windows certificates
+- **Status Badges**: CI/CD status badges in README.md
+
+### Documentation
+- README updated with CI/CD pipeline documentation
+- Release process guide with step-by-step instructions
+- Conventional Commits reference table
+- Code signing setup instructions
+- Local development commands reference
+
+
 ## [0.1.0] - 2026-05-10
 
 ### Added
@@ -106,4 +127,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - electron-store for OS-native persistent storage
 - Axios interceptors for transparent token refresh
 
+[0.2.0]: https://github.com/Obi811/projection-mapper-app/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Obi811/projection-mapper-app/releases/tag/v0.1.0
