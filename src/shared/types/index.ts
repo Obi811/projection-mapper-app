@@ -144,6 +144,46 @@ export interface ProjectFile {
   textOverlays: TextOverlay[];
 }
 
+// ─── Multi-Projector / Output Manager ────────────────────────────────────────
+
+/** Display information from Electron screen API */
+export interface DisplayInfo {
+  id: number;
+  label: string;
+  bounds: { x: number; y: number; width: number; height: number };
+  workArea: { x: number; y: number; width: number; height: number };
+  scaleFactor: number;
+  internal: boolean;
+}
+
+/** Projector configuration stored in electron-store */
+export interface ProjectorConfig {
+  id: string;
+  name: string;
+  displayId: number;
+  displayIndex: number;
+  resolution: { width: number; height: number };
+  position: { x: number; y: number };
+  enabled: boolean;
+  fullscreen: boolean;
+  /** Assigned surface IDs for this projector */
+  assignedSurfaces: string[];
+}
+
+/** Runtime projector state (extends config with live status) */
+export interface ProjectorState extends ProjectorConfig {
+  status: 'idle' | 'active' | 'error' | 'disconnected';
+  windowId?: number;
+  fps?: number;
+}
+
+/** Content assignment — maps content to a projector */
+export interface SurfaceAssignment {
+  projectorId: string;
+  surfaceId: string;
+  layer: number;
+}
+
 // ─── IPC (Main ↔ Renderer) ──────────────────────────────────────────────────
 
 /** Channel names for Electron IPC communication */
@@ -162,6 +202,17 @@ export enum IpcChannel {
 
   // Device
   DEVICE_GET_ID = 'device:getId',
+
+  // Projector / Output Manager
+  PROJECTOR_GET_DISPLAYS = 'projector:getDisplays',
+  PROJECTOR_GET_CONFIGS = 'projector:getConfigs',
+  PROJECTOR_SAVE_CONFIG = 'projector:saveConfig',
+  PROJECTOR_DELETE_CONFIG = 'projector:deleteConfig',
+  PROJECTOR_OPEN_WINDOW = 'projector:openWindow',
+  PROJECTOR_CLOSE_WINDOW = 'projector:closeWindow',
+  PROJECTOR_GET_STATES = 'projector:getStates',
+  PROJECTOR_UPDATE_CONTENT = 'projector:updateContent',
+  PROJECTOR_SCAN_DISPLAYS = 'projector:scanDisplays',
 
   // App
   APP_GET_VERSION = 'app:getVersion',

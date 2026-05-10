@@ -10,8 +10,14 @@
 
 import { ipcMain, app } from 'electron';
 import { IpcChannel } from '../shared/types';
+import type { ProjectorConfig } from '../shared/types';
 import * as authService from '../services/auth-service';
 import * as licenseService from '../services/license-service';
+import * as outputManager from '../services/output-manager';
+import {
+  createProjectorWindow,
+  closeProjectorWindow,
+} from './projector-window';
 import {
   getDeviceId,
   setAuthData,
@@ -19,6 +25,8 @@ import {
   getUser,
   setLicenseData,
   getFeatures,
+  getProjectorConfigs,
+  setProjectorConfigs,
 } from './store';
 
 /**
@@ -97,6 +105,69 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IpcChannel.DEVICE_GET_ID, async () => {
     return getDeviceId();
+  });
+
+  // ─── Projector / Output Manager ──────────────────────────────────────────
+
+  ipcMain.handle(IpcChannel.PROJECTOR_GET_DISPLAYS, async () => {
+    return outputManager.enumerateDisplays();
+  });
+
+  ipcMain.handle(IpcChannel.PROJECTOR_SCAN_DISPLAYS, async () => {
+    return outputManager.enumerateDisplays();
+  });
+
+  ipcMain.handle(IpcChannel.PROJECTOR_GET_CONFIGS, async () => {
+    return outputManager.getConfigs();
+  });
+
+  ipcMain.handle(
+    IpcChannel.PROJECTOR_SAVE_CONFIG,
+    async (_event, config: Partial<ProjectorConfig> & { displayId: number }) => {
+      const saved = outputManager.saveConfig(config);
+      // Persist to store
+      setProjectorConfigs(outputManager.getConfigs());
+      return saved;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.PROJECTOR_DELETE_CONFIG,
+    async (_event, projectorId: string) => {
+      const deleted = outputManager.deleteConfig(projectorId);
+      if (deleted) {
+        setProjectorConfigs(outputManager.getConfigs());
+      }
+      return deleted;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.PROJECTOR_OPEN_WINDOW,
+    async (_event, projectorId: string) => {
+      const config = outputManager.getConfig(projectorId);
+      if (!config) {
+        return { success: false, error: 'Projector config not found' };
+      }
+      const win = createProjectorWindow(config);
+      return {
+        success: !!win,
+        windowId: win?.id,
+        state: outputManager.getState(projectorId),
+      };
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.PROJECTOR_CLOSE_WINDOW,
+    async (_event, projectorId: string) => {
+      const closed = closeProjectorWindow(projectorId);
+      return { success: closed };
+    },
+  );
+
+  ipcMain.handle(IpcChannel.PROJECTOR_GET_STATES, async () => {
+    return outputManager.getStates();
   });
 
   // ─── App ────────────────────────────────────────────────────────────────

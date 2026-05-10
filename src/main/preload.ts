@@ -47,6 +47,32 @@ const electronAPI = {
     getId: () => ipcRenderer.invoke(IpcChannel.DEVICE_GET_ID),
   },
 
+  // ─── Projector / Output Manager ────────────────────────────────────────
+  projector: {
+    getDisplays: () => ipcRenderer.invoke(IpcChannel.PROJECTOR_GET_DISPLAYS),
+    scanDisplays: () => ipcRenderer.invoke(IpcChannel.PROJECTOR_SCAN_DISPLAYS),
+    getConfigs: () => ipcRenderer.invoke(IpcChannel.PROJECTOR_GET_CONFIGS),
+    saveConfig: (config: Record<string, unknown>) =>
+      ipcRenderer.invoke(IpcChannel.PROJECTOR_SAVE_CONFIG, config),
+    deleteConfig: (projectorId: string) =>
+      ipcRenderer.invoke(IpcChannel.PROJECTOR_DELETE_CONFIG, projectorId),
+    openWindow: (projectorId: string) =>
+      ipcRenderer.invoke(IpcChannel.PROJECTOR_OPEN_WINDOW, projectorId),
+    closeWindow: (projectorId: string) =>
+      ipcRenderer.invoke(IpcChannel.PROJECTOR_CLOSE_WINDOW, projectorId),
+    getStates: () => ipcRenderer.invoke(IpcChannel.PROJECTOR_GET_STATES),
+    onStateChange: (callback: (states: unknown[]) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, states: unknown[]) => callback(states);
+      ipcRenderer.on(IpcChannel.PROJECTOR_GET_STATES, handler);
+      return () => ipcRenderer.removeListener(IpcChannel.PROJECTOR_GET_STATES, handler);
+    },
+    onContentUpdate: (callback: (content: unknown) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, content: unknown) => callback(content);
+      ipcRenderer.on(IpcChannel.PROJECTOR_UPDATE_CONTENT, handler);
+      return () => ipcRenderer.removeListener(IpcChannel.PROJECTOR_UPDATE_CONTENT, handler);
+    },
+  },
+
   // ─── App ──────────────────────────────────────────────────────────────
   app: {
     getVersion: () => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),
