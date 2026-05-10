@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added placeholder E2E tests in `tests/e2e/app.spec.ts`
   - Updated `lint` script to use glob pattern instead of deprecated `--ext` flag
   - Downgraded `prefer-const` and `@typescript-eslint/no-var-requires` from errors to warnings
+  - Removed Node.js 18 from test matrix (jsdom v29 requires Node 20+, Electron 33 uses Node 20+)
+  - Fixed `electron-builder` artifact output paths in `build.yml` and `release.yml` (`release/` instead of `dist/`)
 
 ## [0.4.0] - 2026-05-10
 
