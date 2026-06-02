@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2026-06-02
+
+### Fixed
+
+- **Build-Fehler behoben** — `tsconfig.main.json` fehlten `DOM` und `DOM.Iterable` in `lib`
+  - WebAuthn-Typen (`PublicKeyCredentialCreationOptions`, `PublicKeyCredentialRequestOptions`) benötigen DOM-Typdefinitionen
+  - Dies verhinderte die Erstellung der v0.10.0-Binaries (alle 3 Plattformen schlugen bei `npm run build` fehl)
+
+- **CSP-URL aktualisiert** — `index.html` Content Security Policy korrigiert
+  - `connect-src` von `obitron.abacusai.app` auf `licensing.obitron.de` geändert
+  - Ermöglicht API-Requests an den neuen Lizenzserver aus dem Renderer-Prozess
+
 ## [0.9.0] - 2026-06-02
 
 ### Fixed
