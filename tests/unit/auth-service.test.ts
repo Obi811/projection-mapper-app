@@ -7,8 +7,17 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from '@services/api-client';
-import { login, register, socialAuth, refreshTokens } from '@services/auth-service';
-import type { AuthResponse, RefreshResponse } from '@shared/types';
+import {
+  login,
+  register,
+  socialAuth,
+  refreshTokens,
+  passkeyRegisterStart,
+  passkeyRegisterFinish,
+  passkeyLoginStart,
+  passkeyLoginFinish,
+} from '@services/auth-service';
+import type { AuthResponse, RefreshResponse, SerializedCredential } from '@shared/types';
 
 // Mock the apiClient module
 vi.mock('@services/api-client', () => ({
@@ -102,6 +111,94 @@ describe('Auth Service', () => {
         refresh_token: 'old-refresh-token',
       });
       expect(result.access_token).toBe('new-access-token');
+    });
+  });
+
+  // ─── Passkey / WebAuthn ───────────────────────────────────────────────
+
+  describe('passkeyRegisterStart', () => {
+    it('should call POST /auth/passkey/register/start', async () => {
+      const mockOptions = { challenge: 'abc123', rp: { name: 'Test' } };
+      mockPost.mockResolvedValueOnce({ data: mockOptions });
+
+      const result = await passkeyRegisterStart();
+
+      expect(mockPost).toHaveBeenCalledWith('/auth/passkey/register/start');
+      expect(result).toEqual(mockOptions);
+    });
+  });
+
+  describe('passkeyRegisterFinish', () => {
+    it('should call POST /auth/passkey/register/finish with credential', async () => {
+      const mockCred: SerializedCredential = {
+        id: 'cred-1',
+        rawId: 'cmF3SWQ',
+        type: 'public-key',
+        response: {
+          clientDataJSON: 'Y2xpZW50RGF0YQ',
+          attestationObject: 'YXR0ZXN0YXRpb24',
+        },
+      };
+      mockPost.mockResolvedValueOnce({ data: { success: true } });
+
+      const result = await passkeyRegisterFinish(mockCred);
+
+      expect(mockPost).toHaveBeenCalledWith(
+        '/auth/passkey/register/finish',
+        mockCred,
+      );
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('passkeyLoginStart', () => {
+    it('should call POST /auth/passkey/login/start', async () => {
+      const mockOptions = { challenge: 'xyz789', allowCredentials: [] };
+      mockPost.mockResolvedValueOnce({ data: mockOptions });
+
+      const result = await passkeyLoginStart();
+
+      expect(mockPost).toHaveBeenCalledWith('/auth/passkey/login/start');
+      expect(result).toEqual(mockOptions);
+    });
+  });
+
+  describe('passkeyLoginFinish', () => {
+    it('should call POST /auth/passkey/login/finish and return auth tokens', async () => {
+      const mockCred: SerializedCredential = {
+        id: 'cred-1',
+        rawId: 'cmF3SWQ',
+        type: 'public-key',
+        response: {
+          clientDataJSON: 'Y2xpZW50RGF0YQ',
+          authenticatorData: 'YXV0aERhdGE',
+          signature: 'c2lnbmF0dXJl',
+        },
+      };
+      mockPost.mockResolvedValueOnce({ data: mockAuthResponse });
+
+      const result = await passkeyLoginFinish(mockCred);
+
+      expect(mockPost).toHaveBeenCalledWith(
+        '/auth/passkey/login/finish',
+        mockCred,
+      );
+      expect(result.access_token).toBe('test-access-token');
+      expect(result.user.email).toBe('test@example.com');
+    });
+
+    it('should throw on invalid passkey', async () => {
+      const mockCred: SerializedCredential = {
+        id: 'bad-cred',
+        rawId: 'YmFk',
+        type: 'public-key',
+        response: { clientDataJSON: 'YmFk' },
+      };
+      mockPost.mockRejectedValueOnce(new Error('Invalid credential'));
+
+      await expect(passkeyLoginFinish(mockCred)).rejects.toThrow(
+        'Invalid credential',
+      );
     });
   });
 });

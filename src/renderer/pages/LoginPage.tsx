@@ -1,17 +1,61 @@
 /**
  * Login Page
  *
- * Provides email/password authentication with register toggle.
- * Social auth buttons are rendered but disabled pending OAuth integration.
+ * Full authentication UI with:
+ * - Email/password login & registration
+ * - Social auth (Google, Apple) via OAuth popup flow
+ * - Passkey / WebAuthn login (biometric: TouchID, FaceID, Windows Hello)
+ * - Error handling with user-friendly messages
+ * - Loading states for all auth actions
  *
  * In Electron: uses window.electronAPI.auth for IPC calls
  * In browser (dev): falls back to direct service calls
  */
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
+import {
+  isWebAuthnAvailable,
+  isPlatformAuthenticatorAvailable,
+  decodeLoginOptions,
+  serializeLoginCredential,
+} from '../utils/webauthn';
+import {
+  initiateGoogleSignIn,
+  initiateAppleSignIn,
+} from '../utils/social-auth';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
+}
+
+/** Map common error messages to user-friendly text */
+function friendlyError(err: unknown): string {
+  if (err instanceof Error) {
+    const msg = err.message.toLowerCase();
+    if (msg.includes('network') || msg.includes('econnrefused') || msg.includes('timeout')) {
+      return 'Server nicht erreichbar. Bitte Internetverbindung prüfen.';
+    }
+    if (msg.includes('401') || msg.includes('unauthorized') || msg.includes('invalid credentials')) {
+      return 'Ungültige E-Mail oder Passwort.';
+    }
+    if (msg.includes('409') || msg.includes('already exists') || msg.includes('conflict')) {
+      return 'Ein Konto mit dieser E-Mail existiert bereits.';
+    }
+    if (msg.includes('404')) {
+      return 'Server-Endpunkt nicht gefunden. Bitte App aktualisieren.';
+    }
+    if (msg.includes('429') || msg.includes('rate limit')) {
+      return 'Zu viele Versuche. Bitte warte einen Moment.';
+    }
+    if (msg.includes('500') || msg.includes('internal server')) {
+      return 'Serverfehler. Bitte versuche es später erneut.';
+    }
+    if (msg.includes('popup') || msg.includes('window was closed')) {
+      return 'Anmeldefenster wurde geschlossen.';
+    }
+    return err.message;
+  }
+  return 'Authentifizierung fehlgeschlagen. Bitte erneut versuchen.';
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
@@ -20,23 +64,33 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+
+  // Check for WebAuthn / platform authenticator availability
+  useEffect(() => {
+    isPlatformAuthenticatorAvailable().then(setPasskeyAvailable);
+  }, []);
+
+  // ─── Email / Password Submit ──────────────────────────────────────────
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setLoading(true);
 
     try {
       if (window.electronAPI) {
-        // Running inside Electron — use IPC
         if (isRegister) {
           await window.electronAPI.auth.register(email, password, name || undefined);
         } else {
           await window.electronAPI.auth.login(email, password);
         }
       } else {
-        // Running in browser (dev mode) — import services directly
         const { login, register } = await import('@services/auth-service');
         if (isRegister) {
           await register(email, password, name || undefined);
@@ -44,22 +98,105 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           await login(email, password);
         }
       }
-      onLoginSuccess();
+      setSuccess(isRegister ? 'Konto erstellt!' : 'Erfolgreich angemeldet!');
+      setTimeout(onLoginSuccess, 300);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Authentication failed';
-      setError(message);
+      setError(friendlyError(err));
     } finally {
       setLoading(false);
     }
   };
+
+  // ─── Social Auth ──────────────────────────────────────────────────────
+
+  const handleSocialAuth = async (provider: 'google' | 'apple') => {
+    setError(null);
+    setSuccess(null);
+    setSocialLoading(provider);
+
+    try {
+      let idToken: string;
+
+      if (provider === 'google') {
+        idToken = await initiateGoogleSignIn();
+      } else {
+        idToken = await initiateAppleSignIn();
+      }
+
+      if (window.electronAPI) {
+        await window.electronAPI.auth.socialAuth(provider, idToken);
+      } else {
+        const { socialAuth } = await import('@services/auth-service');
+        await socialAuth(provider, idToken);
+      }
+
+      setSuccess('Erfolgreich angemeldet!');
+      setTimeout(onLoginSuccess, 300);
+    } catch (err: unknown) {
+      setError(friendlyError(err));
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  // ─── Passkey Login ────────────────────────────────────────────────────
+
+  const handlePasskeyLogin = async () => {
+    setError(null);
+    setSuccess(null);
+    setPasskeyLoading(true);
+
+    try {
+      let options: Record<string, unknown>;
+
+      if (window.electronAPI) {
+        options = await window.electronAPI.auth.passkeyLoginStart();
+      } else {
+        const { passkeyLoginStart } = await import('@services/auth-service');
+        options = await passkeyLoginStart();
+      }
+
+      // Convert server options → WebAuthn API format
+      const credentialOptions = decodeLoginOptions(options);
+
+      // Trigger biometric prompt (TouchID / FaceID / Windows Hello)
+      const credential = await navigator.credentials.get(credentialOptions);
+      if (!credential) {
+        throw new Error('Passkey-Authentifizierung abgebrochen.');
+      }
+
+      const serialized = serializeLoginCredential(credential as PublicKeyCredential);
+
+      if (window.electronAPI) {
+        await window.electronAPI.auth.passkeyLoginFinish(serialized);
+      } else {
+        const { passkeyLoginFinish } = await import('@services/auth-service');
+        await passkeyLoginFinish(serialized);
+      }
+
+      setSuccess('Erfolgreich mit Passkey angemeldet!');
+      setTimeout(onLoginSuccess, 300);
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        setError('Passkey-Authentifizierung abgebrochen.');
+      } else {
+        setError(friendlyError(err));
+      }
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
+  // ─── Render ───────────────────────────────────────────────────────────
+
+  const isAnyLoading = loading || socialLoading !== null || passkeyLoading;
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>🎯 Projection Mapper</h1>
         <p style={styles.subtitle}>
-          {isRegister ? 'Create your account' : 'Sign in to continue'}
+          {isRegister ? 'Konto erstellen' : 'Anmelden'}
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -70,56 +207,108 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               style={styles.input}
+              disabled={isAnyLoading}
             />
           )}
           <input
             type="email"
-            placeholder="Email"
+            placeholder="E-Mail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             style={styles.input}
+            disabled={isAnyLoading}
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Passwort"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
             style={styles.input}
+            disabled={isAnyLoading}
           />
 
-          {error && <p style={styles.error}>{error}</p>}
+          {error && <p style={styles.error}>⚠️ {error}</p>}
+          {success && <p style={styles.success}>✅ {success}</p>}
 
-          <button type="submit" disabled={loading} style={styles.button}>
-            {loading ? 'Please wait...' : isRegister ? 'Register' : 'Sign In'}
+          <button type="submit" disabled={isAnyLoading} style={{
+            ...styles.button,
+            opacity: isAnyLoading ? 0.6 : 1,
+          }}>
+            {loading
+              ? 'Bitte warten...'
+              : isRegister
+                ? 'Registrieren'
+                : 'Anmelden'}
           </button>
         </form>
 
-        {/* Social Auth — prepared, not yet wired */}
+        {/* Passkey Login */}
+        {passkeyAvailable && !isRegister && (
+          <>
+            <div style={styles.divider}>
+              <span style={styles.dividerLine} />
+              <span style={styles.dividerText}>oder</span>
+              <span style={styles.dividerLine} />
+            </div>
+            <button
+              style={{
+                ...styles.passkeyButton,
+                opacity: isAnyLoading ? 0.6 : 1,
+              }}
+              onClick={handlePasskeyLogin}
+              disabled={isAnyLoading}
+            >
+              {passkeyLoading ? '🔐 Warte auf Biometrie...' : '🔐 Mit Passkey anmelden'}
+            </button>
+          </>
+        )}
+
+        {/* Social Auth */}
         <div style={styles.divider}>
-          <span style={styles.dividerText}>or continue with</span>
+          <span style={styles.dividerLine} />
+          <span style={styles.dividerText}>oder fortfahren mit</span>
+          <span style={styles.dividerLine} />
         </div>
         <div style={styles.socialRow}>
-          <button style={styles.socialButton} disabled title="Coming soon">
-            🔵 Google
+          <button
+            style={{
+              ...styles.socialButton,
+              opacity: isAnyLoading ? 0.6 : 1,
+              cursor: isAnyLoading ? 'not-allowed' : 'pointer',
+            }}
+            onClick={() => handleSocialAuth('google')}
+            disabled={isAnyLoading}
+          >
+            {socialLoading === 'google' ? '⏳ Google...' : '🔵 Google'}
           </button>
-          <button style={styles.socialButton} disabled title="Coming soon">
-            🍎 Apple
+          <button
+            style={{
+              ...styles.socialButton,
+              opacity: isAnyLoading ? 0.6 : 1,
+              cursor: isAnyLoading ? 'not-allowed' : 'pointer',
+            }}
+            onClick={() => handleSocialAuth('apple')}
+            disabled={isAnyLoading}
+          >
+            {socialLoading === 'apple' ? '⏳ Apple...' : '🍎 Apple'}
           </button>
         </div>
 
         <p style={styles.toggle}>
-          {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+          {isRegister ? 'Bereits ein Konto?' : 'Noch kein Konto?'}{' '}
           <button
             style={styles.toggleButton}
             onClick={() => {
               setIsRegister(!isRegister);
               setError(null);
+              setSuccess(null);
             }}
+            disabled={isAnyLoading}
           >
-            {isRegister ? 'Sign In' : 'Register'}
+            {isRegister ? 'Anmelden' : 'Registrieren'}
           </button>
         </p>
       </div>
@@ -127,7 +316,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   );
 };
 
-// ─── Inline Styles (will be migrated to CSS modules / Tailwind later) ────
+// ─── Inline Styles ──────────────────────────────────────────────────────────
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -139,7 +328,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #16213e 100%)',
   },
   card: {
-    width: 400,
+    width: 420,
     padding: 40,
     borderRadius: 12,
     backgroundColor: 'rgba(22, 33, 62, 0.8)',
@@ -185,12 +374,27 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     border: 'none',
     marginTop: 4,
-    transition: 'background-color 0.2s',
+    transition: 'all 0.2s',
   },
   error: {
     color: '#ef4444',
     fontSize: 13,
     textAlign: 'center' as const,
+    padding: '8px 12px',
+    borderRadius: 6,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
+    margin: 0,
+  },
+  success: {
+    color: '#22c55e',
+    fontSize: 13,
+    textAlign: 'center' as const,
+    padding: '8px 12px',
+    borderRadius: 6,
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    border: '1px solid rgba(34, 197, 94, 0.2)',
+    margin: 0,
   },
   divider: {
     display: 'flex',
@@ -198,12 +402,27 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '20px 0',
     gap: 12,
   },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#27272a',
+  },
   dividerText: {
     color: '#71717a',
     fontSize: 12,
     whiteSpace: 'nowrap' as const,
-    flex: 1,
-    textAlign: 'center' as const,
+  },
+  passkeyButton: {
+    width: '100%',
+    padding: '12px 16px',
+    borderRadius: 8,
+    border: '1px solid #6366f1',
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    color: '#a5b4fc',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   },
   socialRow: {
     display: 'flex',
@@ -217,8 +436,8 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: '#1a1a2e',
     color: '#a1a1aa',
     fontSize: 13,
-    cursor: 'not-allowed',
-    opacity: 0.6,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   },
   toggle: {
     textAlign: 'center' as const,

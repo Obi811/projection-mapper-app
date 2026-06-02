@@ -16,6 +16,7 @@ import type {
   AuthResponse,
   RefreshResponse,
   SocialProvider,
+  SerializedCredential,
   User,
 } from '../shared/types';
 
@@ -117,4 +118,54 @@ export function logout(): void {
   // Intentionally empty — cleanup is handled by the caller.
   // This function exists as a hook point for future server-side
   // session invalidation if needed.
+}
+
+// ─── Passkey / WebAuthn ─────────────────────────────────────────────────────
+
+/**
+ * Start passkey registration — called after the user is already logged in.
+ * Returns PublicKeyCredentialCreationOptions for navigator.credentials.create().
+ */
+export async function passkeyRegisterStart(): Promise<Record<string, unknown>> {
+  const { data } = await apiClient.post<Record<string, unknown>>(
+    '/auth/passkey/register/start',
+  );
+  return data;
+}
+
+/**
+ * Finish passkey registration — sends the credential back to the server.
+ */
+export async function passkeyRegisterFinish(
+  credential: SerializedCredential,
+): Promise<{ success: boolean }> {
+  const { data } = await apiClient.post<{ success: boolean }>(
+    '/auth/passkey/register/finish',
+    credential,
+  );
+  return data;
+}
+
+/**
+ * Start passkey login — server returns PublicKeyCredentialRequestOptions.
+ */
+export async function passkeyLoginStart(): Promise<Record<string, unknown>> {
+  const { data } = await apiClient.post<Record<string, unknown>>(
+    '/auth/passkey/login/start',
+  );
+  return data;
+}
+
+/**
+ * Finish passkey login — sends the assertion credential to the server.
+ * Returns tokens + user like a normal login.
+ */
+export async function passkeyLoginFinish(
+  credential: SerializedCredential,
+): Promise<AuthResponse> {
+  const { data } = await apiClient.post<AuthResponse>(
+    '/auth/passkey/login/finish',
+    credential,
+  );
+  return data;
 }

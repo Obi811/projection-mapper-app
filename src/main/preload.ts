@@ -29,6 +29,18 @@ const electronAPI = {
     logout: () => ipcRenderer.invoke(IpcChannel.AUTH_LOGOUT),
 
     getUser: () => ipcRenderer.invoke(IpcChannel.AUTH_GET_USER),
+
+    socialAuth: (provider: string, idToken: string) =>
+      ipcRenderer.invoke(IpcChannel.AUTH_SOCIAL, provider, idToken),
+
+    passkeyRegisterStart: () =>
+      ipcRenderer.invoke(IpcChannel.AUTH_PASSKEY_REGISTER_START),
+    passkeyRegisterFinish: (credential: unknown) =>
+      ipcRenderer.invoke(IpcChannel.AUTH_PASSKEY_REGISTER_FINISH, credential),
+    passkeyLoginStart: () =>
+      ipcRenderer.invoke(IpcChannel.AUTH_PASSKEY_LOGIN_START),
+    passkeyLoginFinish: (credential: unknown) =>
+      ipcRenderer.invoke(IpcChannel.AUTH_PASSKEY_LOGIN_FINISH, credential),
   },
 
   // ─── License ──────────────────────────────────────────────────────────

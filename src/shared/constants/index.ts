@@ -6,7 +6,7 @@
  */
 
 /** Base URL of the Obitron licensing / auth API */
-export const API_BASE_URL = 'https://obitron.abacusai.app';
+export const API_BASE_URL = process.env.OBITRON_API_URL ?? 'https://licensing.obitron.de';
 
 /** Current application version — kept in sync with package.json via build step */
 export const APP_VERSION = '0.1.0';

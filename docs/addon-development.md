@@ -222,7 +222,7 @@ To publish your addon to the marketplace:
 
 1. Ensure your `addon.json` is complete and valid
 2. Test thoroughly with the latest app version
-3. Submit via the marketplace at [obitron.abacusai.app](https://obitron.abacusai.app)
+3. Submit via the marketplace at [licensing.obitron.de](https://licensing.obitron.de)
 
 ## Troubleshooting
 

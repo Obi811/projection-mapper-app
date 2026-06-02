@@ -76,6 +76,48 @@ export function registerIpcHandlers(): void {
     return getUser();
   });
 
+  ipcMain.handle(
+    IpcChannel.AUTH_SOCIAL,
+    async (_event, provider: string, idToken: string) => {
+      const response = await authService.socialAuth(
+        provider as 'google' | 'apple',
+        idToken,
+      );
+      setAuthData(response.access_token, response.refresh_token, response.user);
+      return response;
+    },
+  );
+
+  // ─── Passkey / WebAuthn ─────────────────────────────────────────────────
+
+  ipcMain.handle(IpcChannel.AUTH_PASSKEY_REGISTER_START, async () => {
+    return authService.passkeyRegisterStart();
+  });
+
+  ipcMain.handle(
+    IpcChannel.AUTH_PASSKEY_REGISTER_FINISH,
+    async (_event, credential: unknown) => {
+      return authService.passkeyRegisterFinish(
+        credential as import('../shared/types').SerializedCredential,
+      );
+    },
+  );
+
+  ipcMain.handle(IpcChannel.AUTH_PASSKEY_LOGIN_START, async () => {
+    return authService.passkeyLoginStart();
+  });
+
+  ipcMain.handle(
+    IpcChannel.AUTH_PASSKEY_LOGIN_FINISH,
+    async (_event, credential: unknown) => {
+      const response = await authService.passkeyLoginFinish(
+        credential as import('../shared/types').SerializedCredential,
+      );
+      setAuthData(response.access_token, response.refresh_token, response.user);
+      return response;
+    },
+  );
+
   // ─── License ────────────────────────────────────────────────────────────
 
   ipcMain.handle(

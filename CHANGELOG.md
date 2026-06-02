@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-06-02
+
+### Fixed
+
+- **API Base URL** — Changed from `obitron.abacusai.app` to `licensing.obitron.de`
+  - Fixes 404 errors on login, registration, and all API calls
+  - Added `OBITRON_API_URL` environment variable support for custom API endpoints
+  - Updated all documentation references
+
+### Added
+
+- **Social Authentication** — Fully functional Google & Apple Sign-In
+  - OAuth popup flow for desktop Electron apps
+  - `initiateGoogleSignIn()` / `initiateAppleSignIn()` with popup management
+  - Backend token exchange via `POST /auth/social`
+  - New IPC channel `AUTH_SOCIAL` for renderer ↔ main communication
+  - UI buttons are now functional (no longer disabled/placeholder)
+
+- **Passkey / WebAuthn Authentication** — Biometric login support
+  - Registration flow: `POST /auth/passkey/register/start` + `navigator.credentials.create()` + `POST /auth/passkey/register/finish`
+  - Login flow: `POST /auth/passkey/login/start` + `navigator.credentials.get()` + `POST /auth/passkey/login/finish`
+  - WebAuthn utilities (`src/renderer/utils/webauthn.ts`): base64url encoding, credential serialization, options decoding
+  - Platform authenticator detection (TouchID, FaceID, Windows Hello)
+  - Passkey button auto-hidden when biometrics unavailable
+  - 4 new IPC channels for passkey operations
+
+- **Improved Auth UX**
+  - German localisation for all auth UI text
+  - User-friendly error messages (network, 401, 409, 429, 500)
+  - Success messages with visual feedback
+  - Loading states for all auth actions (email, social, passkey)
+  - Disabled inputs during pending requests
+  - Better error styling with colored backgrounds
+
+### Changed
+
+- **Auth Service** — Added `passkeyRegisterStart`, `passkeyRegisterFinish`, `passkeyLoginStart`, `passkeyLoginFinish` methods
+- **IPC Handlers** — 6 new handlers (social auth + passkey lifecycle)
+- **Preload Bridge** — Extended `auth` namespace with social + passkey methods
+- **Unit Tests** — 5 new passkey auth tests (126 total, all passing)
+
 ## [0.7.0] - 2026-06-02
 
 ### Added
