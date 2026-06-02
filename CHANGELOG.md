@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-02
+
+### Added
+
+- **Automatic Release System** — Conventional Commits-based automatic versioning and release
+  - **Auto Release Workflow** (`.github/workflows/auto-release.yml`): 4-job pipeline
+    - Quality Gate: lint, typecheck, unit tests must pass before any release
+    - Commit Analysis: parses conventional commits to determine version bump type
+    - Release: bumps `package.json`, creates git tag, publishes GitHub Release with notes
+    - Build Binaries: cross-platform builds (Mac, Windows, Linux) attached to release
+  - **Branch-specific releases**: `main` → stable (v1.0.0), `develop` → beta (v1.0.0-beta.1)
+  - **commitlint** (`commitlint.config.js`): enforces conventional commit message format
+    - Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+    - Subject max 100 chars, header max 120 chars
+  - **Husky git hooks**: local commit validation before push
+    - `commit-msg`: validates commit message format via commitlint
+    - `pre-commit`: runs lint and typecheck
+  - **Version-bump NPM scripts**:
+    - `npm run version:patch` — bump patch version
+    - `npm run version:minor` — bump minor version
+    - `npm run version:major` — bump major version
+    - `npm run version:beta` — bump to next beta prerelease
+  - **`develop` branch**: created for beta/pre-release workflow
+
+### Changed
+
+- **README.md**: Comprehensive update with branch strategy, auto-release docs, conventional commits guide, contributing workflow
+- **package.json**: Added `prepare` script for Husky, version-bump scripts
+
+### Dependencies
+
+- Added `@commitlint/cli` ^21.0.0
+- Added `@commitlint/config-conventional` ^21.0.0
+- Added `husky` ^9.1.0
+
 ## [0.4.1] - 2026-05-10
 
 ### Fixed

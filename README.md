@@ -3,6 +3,7 @@
 [![Tests](https://github.com/Obi811/projection-mapper-app/actions/workflows/test.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/test.yml)
 [![Build](https://github.com/Obi811/projection-mapper-app/actions/workflows/build.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/build.yml)
 [![Release](https://github.com/Obi811/projection-mapper-app/actions/workflows/release.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/release.yml)
+[![Auto Release](https://github.com/Obi811/projection-mapper-app/actions/workflows/auto-release.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/auto-release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Professional projection mapping desktop application for Mac and Windows, built with **Electron**, **React**, **TypeScript**, and **Three.js**.
@@ -185,20 +186,52 @@ All API calls target **https://obitron.abacusai.app**:
 
 ## CI/CD Pipeline
 
-This project uses **GitHub Actions** for continuous integration and delivery.
+This project uses **GitHub Actions** for continuous integration and delivery with **automatic releases** based on [Conventional Commits](https://www.conventionalcommits.org/).
 
 ### Workflows
 
 | Workflow | Trigger | Description |
 |----------|---------|-------------|
-| **Tests** | Push & PR to `main`/`develop` | Runs unit tests on Node 18.x & 20.x with coverage |
+| **Tests** | Push & PR to `main`/`develop` | Lint, typecheck, unit tests (Node 20) |
 | **Build** | Push to `main` & PR | Cross-platform builds (Mac, Windows, Linux) |
-| **Release** | Git tag `v*.*.*` | Full release with binaries on GitHub Releases |
+| **Release** | Git tag `v*.*.*` | Manual release with binaries on GitHub Releases |
+| **Auto Release** | Push to `main`/`develop` | Automatic version bump, tag, changelog & release |
+
+### Branch Strategy
+
+| Branch | Purpose | Release Type | Example Version |
+|--------|---------|--------------|-----------------|
+| `main` | Stable production releases | Stable | `v1.2.0` |
+| `develop` | Pre-release / beta testing | Beta (pre-release) | `v1.2.0-beta.1` |
+
+### Automatic Release Process
+
+The **Auto Release** workflow runs on every push to `main` or `develop`:
+
+1. **Quality Gate** — Lint, typecheck, and unit tests must pass
+2. **Commit Analysis** — Parses conventional commits since the last tag:
+   - `feat:` → **minor** bump (0.4.0 → 0.5.0)
+   - `fix:` / `perf:` → **patch** bump (0.4.0 → 0.4.1)
+   - `feat!:` / `fix!:` (breaking) → **major** bump (0.4.0 → 1.0.0)
+   - Other types (`docs:`, `chore:`, etc.) → no release
+3. **Release** — Bumps `package.json`, creates git tag, pushes, publishes GitHub Release
+4. **Build Binaries** — Cross-platform builds (Mac, Windows, Linux) attached to the release
+
+> ⚠️ **No release is created if tests fail** — the quality gate blocks all downstream jobs.
+
+### Manual Version Bump (NPM Scripts)
+
+```bash
+npm run version:patch    # 0.5.0 → 0.5.1
+npm run version:minor    # 0.5.0 → 0.6.0
+npm run version:major    # 0.5.0 → 1.0.0
+npm run version:beta     # 0.5.0 → 0.5.1-beta.0
+```
 
 ### Local Development
 
 ```bash
-# Install dependencies
+# Install dependencies (also sets up Husky git hooks)
 npm install
 
 # Start development (Electron + Vite HMR)
@@ -226,51 +259,45 @@ npm run package:linux   # Linux (.AppImage, .deb)
 npm run package:all     # All platforms
 ```
 
-### Release Process
-
-1. **Update version** in `package.json`:
-   ```bash
-   npm version patch   # 0.1.0 → 0.1.1
-   npm version minor   # 0.1.0 → 0.2.0
-   npm version major   # 0.1.0 → 1.0.0
-   ```
-
-2. **Update CHANGELOG.md** (automated):
-   ```bash
-   node scripts/update-changelog.js              # auto from package.json
-   node scripts/update-changelog.js --dry-run    # preview first
-   node scripts/update-changelog.js --version 0.2.0  # explicit version
-   ```
-
-3. **Commit & tag**:
-   ```bash
-   git add -A
-   git commit -m "chore: release v0.2.0"
-   git tag v0.2.0
-   git push origin main --tags
-   ```
-
-4. **GitHub Actions** will automatically:
-   - Run all tests
-   - Build for Mac, Windows, and Linux
-   - Create a GitHub Release with all binaries
-   - Attach the changelog section as release notes
-
 ### Conventional Commits
 
-This project follows [Conventional Commits](https://www.conventionalcommits.org/) for automated changelog generation:
+This project enforces [Conventional Commits](https://www.conventionalcommits.org/) via **commitlint** + **Husky** git hooks. Every commit message is validated locally before it reaches CI.
 
-| Prefix | Category | Example |
-|--------|----------|---------|
-| `feat:` | Added | `feat: add keystone correction` |
-| `fix:` | Fixed | `fix: resolve token refresh race condition` |
-| `docs:` | Documentation | `docs: update API reference` |
-| `refactor:` | Changed | `refactor: extract projection service` |
-| `perf:` | Performance | `perf: optimize WebGL render loop` |
-| `test:` | Testing | `test: add canvas unit tests` |
-| `ci:` | CI/CD | `ci: add Windows code signing` |
-| `chore:` | Maintenance | `chore: update dependencies` |
-| `feat!:` | Breaking | `feat!: change project file format` |
+#### Commit Format
+
+```
+<type>(<optional scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+#### Commit Types
+
+| Prefix | Bump | Category | Example |
+|--------|------|----------|---------|
+| `feat:` | minor | ✨ Features | `feat: add keystone correction` |
+| `fix:` | patch | 🐛 Bug Fixes | `fix: resolve token refresh race condition` |
+| `perf:` | patch | ⚡ Performance | `perf: optimize WebGL render loop` |
+| `docs:` | — | 📝 Documentation | `docs: update API reference` |
+| `style:` | — | 💄 Code Style | `style: fix indentation` |
+| `refactor:` | — | ♻️ Refactoring | `refactor: extract projection service` |
+| `test:` | — | ✅ Testing | `test: add canvas unit tests` |
+| `build:` | — | 📦 Build | `build: update electron-builder config` |
+| `ci:` | — | 👷 CI/CD | `ci: add Windows code signing` |
+| `chore:` | — | 🔧 Maintenance | `chore: update dependencies` |
+| `revert:` | — | ⏪ Revert | `revert: undo feature X` |
+| `feat!:` | **major** | 💥 Breaking | `feat!: change project file format` |
+
+#### Breaking Changes
+
+Add `!` after the type or include `BREAKING CHANGE:` in the footer:
+```
+feat!: redesign projection surface API
+
+BREAKING CHANGE: ProjectionSurface interface now requires a `transform` property.
+```
 
 ### Code Signing
 
@@ -287,11 +314,13 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 
 ## Contributing
 
-1. Create a feature branch: `git checkout -b feature/my-feature`
-2. Follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages
+1. Create a feature branch from `develop`: `git checkout -b feature/my-feature develop`
+2. Follow [Conventional Commits](https://www.conventionalcommits.org/) for all commit messages (enforced by Husky hooks)
 3. Make your changes and add tests
-4. Run `npm test` to verify all tests pass
-5. Submit a pull request — CI will run tests and builds automatically
+4. Run `npm test && npm run lint && npm run typecheck` to verify
+5. Submit a pull request to `develop` — CI will run tests and builds automatically
+6. After review, merge to `develop` → automatic **beta** release
+7. When ready for production, merge `develop` → `main` → automatic **stable** release
 
 ---
 
