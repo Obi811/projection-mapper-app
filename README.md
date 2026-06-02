@@ -152,7 +152,7 @@ npm run package:all   # Package for all platforms
 
 ## API Integration
 
-All API calls target **https://obitron.abacusai.app**:
+All API calls target **https://licensing.obitron.de**:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -160,6 +160,10 @@ All API calls target **https://obitron.abacusai.app**:
 | `/auth/login` | POST | Email/password login |
 | `/auth/refresh` | POST | Refresh access token |
 | `/auth/social` | POST | Google/Apple OAuth |
+| `/auth/passkey/register/start` | POST | Start passkey registration |
+| `/auth/passkey/register/finish` | POST | Complete passkey registration |
+| `/auth/passkey/login/start` | POST | Start passkey login |
+| `/auth/passkey/login/finish` | POST | Complete passkey login |
 | `/licenses/validate` | POST | Validate license + device |
 | `/licenses/activate` | POST | Activate license on device |
 | `/addons` | GET | List marketplace addons |

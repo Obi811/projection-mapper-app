@@ -32,6 +32,40 @@ export interface RefreshResponse {
 /** Social auth providers */
 export type SocialProvider = 'google' | 'apple';
 
+// ─── Passkey / WebAuthn ──────────────────────────────────────────────────────
+
+/** Options returned by server for navigator.credentials.create() */
+export interface PasskeyRegistrationOptions {
+  publicKey: PublicKeyCredentialCreationOptions;
+}
+
+/** Options returned by server for navigator.credentials.get() */
+export interface PasskeyLoginOptions {
+  publicKey: PublicKeyCredentialRequestOptions;
+}
+
+/** Serialised credential for transport over IPC / JSON */
+export interface SerializedCredential {
+  id: string;
+  rawId: string;
+  type: string;
+  response: {
+    clientDataJSON: string;
+    attestationObject?: string;
+    authenticatorData?: string;
+    signature?: string;
+    userHandle?: string;
+  };
+}
+
+/** A registered passkey (for management UI) */
+export interface RegisteredPasskey {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsed?: string;
+}
+
 // ─── Licensing ───────────────────────────────────────────────────────────────
 
 /**
@@ -345,6 +379,11 @@ export enum IpcChannel {
   AUTH_LOGOUT = 'auth:logout',
   AUTH_REFRESH = 'auth:refresh',
   AUTH_GET_USER = 'auth:getUser',
+  AUTH_SOCIAL = 'auth:social',
+  AUTH_PASSKEY_REGISTER_START = 'auth:passkey:register:start',
+  AUTH_PASSKEY_REGISTER_FINISH = 'auth:passkey:register:finish',
+  AUTH_PASSKEY_LOGIN_START = 'auth:passkey:login:start',
+  AUTH_PASSKEY_LOGIN_FINISH = 'auth:passkey:login:finish',
 
   // License
   LICENSE_VALIDATE = 'license:validate',

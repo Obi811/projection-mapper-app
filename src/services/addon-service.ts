@@ -4,7 +4,7 @@
  * Provides access to the addon marketplace for discovering,
  * purchasing, downloading, and checking installed addons.
  *
- * API endpoints target https://obitron.abacusai.app
+ * API endpoints target https://licensing.obitron.de
  */
 
 import { apiClient } from './api-client';
