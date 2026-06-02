@@ -1,0 +1,29 @@
+{
+  "id": "hello-world",
+  "name": "Hello World",
+  "version": "1.0.0",
+  "description": "A simple example addon demonstrating the Projection Mapper addon API. Logs lifecycle events and listens for projection changes.",
+  "author": "Projection Mapper Team",
+  "entry": "index.js",
+  "category": "tool",
+  "permissions": [
+    "projection:read",
+    "storage:read",
+    "storage:write"
+  ],
+  "settings": {
+    "greeting": {
+      "type": "string",
+      "label": "Greeting Message",
+      "description": "The message to log on activation",
+      "default": "Hello from the addon system!"
+    },
+    "verbose": {
+      "type": "boolean",
+      "label": "Verbose Logging",
+      "description": "Enable detailed lifecycle logging",
+      "default": false
+    }
+  },
+  "minAppVersion": "0.7.0"
+}

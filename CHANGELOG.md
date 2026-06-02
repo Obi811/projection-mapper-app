@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-06-02
+
+### Added
+
+- **Addon System** — Full plugin/addon framework with marketplace integration
+  - **Addon Manifest** (`addon.json`): declarative format with permissions, settings schema, categories
+  - **Plugin Loader** (`src/services/plugin-loader.ts`): dynamic addon discovery, loading, lifecycle management
+    - Manifest validation (semver, permissions, categories)
+    - Full lifecycle: install → load → enable ⇄ disable → unload → uninstall
+    - Sandboxed addon registry with graceful shutdown
+  - **Addon API / SDK** (`src/services/addon-api.ts`): developer-facing API for addons
+    - Event bus (subscribe/emit cross-addon events)
+    - Permission-gated access (projection, storage, logging)
+    - `AddonEventBus` singleton with typed events
+  - **Marketplace Integration** (`src/services/addon-service.ts`): obitron.abacusai.app API client
+    - Browse addons by category, view details, purchase, check ownership
+    - Automatic update checking with semver comparison
+  - **Addon Manager UI**: sidebar panel with enable/disable toggles
+    - `AddonManagerPanel` — installed addons list, feature-gated
+    - `AddonMarketplace` — modal browser with category filters
+    - `AddonDetailsDialog` — settings editor, permissions view, uninstall
+  - **IPC Bridge**: 14 new IPC channels for addon operations
+  - **Persistent Storage**: addon state and settings in electron-store
+  - **Example Addon** (`example-addons/hello-world/`): demonstrates lifecycle, events, storage, settings
+  - **Feature-gated**: requires `addon_system` premium license flag
+  - **Developer Documentation** (`docs/addon-development.md`): full guide with API reference
+  - **Unit Tests**: plugin-loader manifest validation, addon-service marketplace integration
+
 ## [0.5.0] - 2026-06-02
 
 ### Added

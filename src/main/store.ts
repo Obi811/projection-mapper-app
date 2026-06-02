@@ -13,7 +13,7 @@
 import Store from 'electron-store';
 import { v4 as uuidv4 } from 'uuid';
 import { STORE_KEYS } from '../shared/constants';
-import type { User, FeatureFlag, ProjectorConfig, KeystoneConfig, KeystonePreset } from '../shared/types';
+import type { User, FeatureFlag, ProjectorConfig, KeystoneConfig, KeystonePreset, InstalledAddon } from '../shared/types';
 import { configureTokenHandlers } from '../services/api-client';
 
 interface StoreSchema {
@@ -32,6 +32,8 @@ interface StoreSchema {
   [STORE_KEYS.PROJECTOR_CONFIGS]: ProjectorConfig[];
   [STORE_KEYS.KEYSTONE_CONFIGS]: KeystoneConfig[];
   [STORE_KEYS.KEYSTONE_PRESETS]: KeystonePreset[];
+  [STORE_KEYS.ADDON_INSTALLED]: InstalledAddon[];
+  [STORE_KEYS.ADDON_SETTINGS]: Record<string, Record<string, unknown>>;
 }
 
 let store: Store<StoreSchema>;
@@ -54,6 +56,8 @@ export function initStore(): void {
       [STORE_KEYS.PROJECTOR_CONFIGS]: [],
       [STORE_KEYS.KEYSTONE_CONFIGS]: [],
       [STORE_KEYS.KEYSTONE_PRESETS]: [],
+      [STORE_KEYS.ADDON_INSTALLED]: [],
+      [STORE_KEYS.ADDON_SETTINGS]: {},
     },
   });
 
@@ -150,4 +154,22 @@ export function getKeystonePresets(): KeystonePreset[] {
 
 export function setKeystonePresets(presets: KeystonePreset[]): void {
   store.set(STORE_KEYS.KEYSTONE_PRESETS, presets);
+}
+
+// ─── Addon persistence ──────────────────────────────────────────────────────
+
+export function getInstalledAddons(): InstalledAddon[] {
+  return store.get(STORE_KEYS.ADDON_INSTALLED) ?? [];
+}
+
+export function setInstalledAddons(addons: InstalledAddon[]): void {
+  store.set(STORE_KEYS.ADDON_INSTALLED, addons);
+}
+
+export function getAddonSettings(): Record<string, Record<string, unknown>> {
+  return store.get(STORE_KEYS.ADDON_SETTINGS) ?? {};
+}
+
+export function setAddonSettings(settings: Record<string, Record<string, unknown>>): void {
+  store.set(STORE_KEYS.ADDON_SETTINGS, settings);
 }

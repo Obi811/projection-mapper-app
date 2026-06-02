@@ -56,6 +56,35 @@ export const KEYSTONE_ARROW_STEP = 0.005; // 0.5% per arrow key press
 export const KEYSTONE_ARROW_STEP_FINE = 0.001; // 0.1% with Shift held
 export const MAX_KEYSTONE_PRESETS = 20;
 
+/** Addon system limits */
+export const MAX_ADDONS = 50;
+export const ADDON_DIR_NAME = 'addons';
+export const ADDON_MANIFEST_FILENAME = 'addon.json';
+
+/** Valid addon permissions */
+export const VALID_ADDON_PERMISSIONS = [
+  'projection:read',
+  'projection:write',
+  'surfaces:read',
+  'surfaces:write',
+  'projectors:read',
+  'keystone:read',
+  'keystone:write',
+  'ui:sidebar',
+  'ui:toolbar',
+  'storage:read',
+  'storage:write',
+  'network:fetch',
+] as const;
+
+/** Addon category labels for UI */
+export const ADDON_CATEGORY_LABELS: Record<string, string> = {
+  effect: 'Effects',
+  integration: 'Integrations',
+  import_export: 'Import / Export',
+  tool: 'Tools',
+};
+
 /** Electron Store keys */
 export const STORE_KEYS = {
   ACCESS_TOKEN: 'auth.accessToken',
@@ -68,4 +97,6 @@ export const STORE_KEYS = {
   PROJECTOR_CONFIGS: 'projectors.configs',
   KEYSTONE_CONFIGS: 'keystone.configs',
   KEYSTONE_PRESETS: 'keystone.presets',
+  ADDON_INSTALLED: 'addons.installed',
+  ADDON_SETTINGS: 'addons.settings',
 } as const;

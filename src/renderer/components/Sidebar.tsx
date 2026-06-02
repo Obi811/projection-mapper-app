@@ -13,6 +13,7 @@
 import React from 'react';
 import { ProjectorManagerPanel } from './ProjectorManagerPanel';
 import { KeystonePanel } from './KeystonePanel';
+import { AddonManagerPanel } from './AddonManagerPanel';
 import { useFeatureGate } from '../hooks/useFeatureGate';
 import type { KeystoneCorners, KeystoneConfig } from '../../shared/types';
 
@@ -120,6 +121,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Section: Projector Management */}
       <ProjectorManagerPanel
         featureEnabled={hasFeature('multi_surface')}
+        onUpgradePrompt={() => {
+          // TODO: Open license upgrade dialog or redirect
+        }}
+      />
+
+      {/* Section: Addon Manager */}
+      <AddonManagerPanel
+        featureEnabled={hasFeature('addon_system')}
         onUpgradePrompt={() => {
           // TODO: Open license upgrade dialog or redirect
         }}

@@ -80,6 +80,10 @@ export interface LicenseActivationResponse {
 
 // ─── Addons / Marketplace ────────────────────────────────────────────────────
 
+/** Category of an addon in the marketplace */
+export type AddonCategory = 'effect' | 'integration' | 'import_export' | 'tool';
+
+/** Marketplace addon (from API) */
 export interface Addon {
   id: string;
   slug: string;
@@ -90,12 +94,116 @@ export interface Addon {
   currency: string;
   author: string;
   thumbnailUrl?: string;
-  category: string;
+  category: AddonCategory;
 }
 
 export interface AddonPurchaseResponse {
   success: boolean;
   addon: Addon;
+}
+
+/** Permissions an addon can request */
+export type AddonPermission =
+  | 'projection:read'
+  | 'projection:write'
+  | 'surfaces:read'
+  | 'surfaces:write'
+  | 'projectors:read'
+  | 'keystone:read'
+  | 'keystone:write'
+  | 'ui:sidebar'
+  | 'ui:toolbar'
+  | 'storage:read'
+  | 'storage:write'
+  | 'network:fetch';
+
+/** Addon manifest (addon.json) — defines the addon's metadata and entry point */
+export interface AddonManifest {
+  /** Unique addon identifier (reverse-dns style, e.g. "com.example.my-addon") */
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  author: string;
+  /** Relative path to the entry module (default: "index.js") */
+  entry: string;
+  /** Category for marketplace display */
+  category: AddonCategory;
+  /** Permissions requested by this addon */
+  permissions: AddonPermission[];
+  /** Minimum app version required (semver) */
+  minAppVersion?: string;
+  /** Optional icon path relative to addon directory */
+  icon?: string;
+  /** Marketplace slug (for update checks) */
+  marketplaceSlug?: string;
+  /** Addon settings schema (JSON Schema subset) */
+  settings?: AddonSettingsSchema;
+}
+
+/** JSON Schema-like definition for addon settings */
+export interface AddonSettingsSchema {
+  [key: string]: {
+    type: 'string' | 'number' | 'boolean' | 'select';
+    label: string;
+    description?: string;
+    default: string | number | boolean;
+    options?: Array<{ label: string; value: string | number }>;
+    min?: number;
+    max?: number;
+  };
+}
+
+/** Runtime state of a loaded addon */
+export type AddonState = 'installed' | 'loaded' | 'enabled' | 'disabled' | 'error';
+
+/** Installed addon — manifest + runtime state */
+export interface InstalledAddon {
+  manifest: AddonManifest;
+  state: AddonState;
+  /** Absolute path to addon directory */
+  path: string;
+  /** Error message if state is 'error' */
+  error?: string;
+  /** When addon was installed */
+  installedAt: string;
+  /** When addon was last enabled */
+  lastEnabledAt?: string;
+  /** Per-addon user settings */
+  settings: Record<string, string | number | boolean>;
+}
+
+/** Event types that addons can subscribe to */
+export type AddonEventType =
+  | 'app:ready'
+  | 'app:beforeQuit'
+  | 'projection:update'
+  | 'projection:render'
+  | 'surface:added'
+  | 'surface:removed'
+  | 'surface:changed'
+  | 'projector:connected'
+  | 'projector:disconnected'
+  | 'keystone:changed'
+  | 'addon:settingsChanged';
+
+/** Addon event payload */
+export interface AddonEvent<T = unknown> {
+  type: AddonEventType;
+  timestamp: number;
+  source: string; // addon ID or 'app'
+  data: T;
+}
+
+/** Addon lifecycle hooks that addons implement */
+export interface AddonHooks {
+  onLoad?: () => void | Promise<void>;
+  onEnable?: () => void | Promise<void>;
+  onDisable?: () => void | Promise<void>;
+  onUnload?: () => void | Promise<void>;
+  onProjectionUpdate?: (data: { surfaces: ProjectionSurface[] }) => void;
+  onSettingsChanged?: (settings: Record<string, string | number | boolean>) => void;
+  onEvent?: (event: AddonEvent) => void;
 }
 
 // ─── Projection / Canvas ────────────────────────────────────────────────────
@@ -265,6 +373,22 @@ export enum IpcChannel {
   KEYSTONE_SAVE_PRESET = 'keystone:savePreset',
   KEYSTONE_DELETE_PRESET = 'keystone:deletePreset',
   KEYSTONE_RESET = 'keystone:reset',
+
+  // Addons
+  ADDON_LIST_MARKETPLACE = 'addon:listMarketplace',
+  ADDON_LIST_BY_CATEGORY = 'addon:listByCategory',
+  ADDON_GET_DETAILS = 'addon:getDetails',
+  ADDON_PURCHASE = 'addon:purchase',
+  ADDON_CHECK_OWNED = 'addon:checkOwned',
+  ADDON_LIST_MY = 'addon:listMy',
+  ADDON_INSTALL = 'addon:install',
+  ADDON_UNINSTALL = 'addon:uninstall',
+  ADDON_ENABLE = 'addon:enable',
+  ADDON_DISABLE = 'addon:disable',
+  ADDON_GET_INSTALLED = 'addon:getInstalled',
+  ADDON_GET_SETTINGS = 'addon:getSettings',
+  ADDON_SAVE_SETTINGS = 'addon:saveSettings',
+  ADDON_CHECK_UPDATES = 'addon:checkUpdates',
 
   // App
   APP_GET_VERSION = 'app:getVersion',

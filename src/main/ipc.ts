@@ -10,11 +10,13 @@
 
 import { ipcMain, app } from 'electron';
 import { IpcChannel } from '../shared/types';
-import type { ProjectorConfig, KeystoneCorners } from '../shared/types';
+import type { ProjectorConfig, KeystoneCorners, AddonCategory } from '../shared/types';
 import * as authService from '../services/auth-service';
 import * as licenseService from '../services/license-service';
 import * as outputManager from '../services/output-manager';
 import * as keystoneService from '../services/keystone-service';
+import * as addonService from '../services/addon-service';
+import * as pluginLoader from '../services/plugin-loader';
 import {
   createProjectorWindow,
   closeProjectorWindow,
@@ -32,6 +34,10 @@ import {
   setKeystoneConfigs,
   getKeystonePresets,
   setKeystonePresets,
+  getInstalledAddons,
+  setInstalledAddons,
+  getAddonSettings,
+  setAddonSettings,
 } from './store';
 
 /**
@@ -252,5 +258,82 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IpcChannel.APP_QUIT, async () => {
     app.quit();
+  });
+
+  // ─── Addon System ──────────────────────────────────────────────────────
+
+  ipcMain.handle(IpcChannel.ADDON_LIST_MARKETPLACE, async (_event, category?: AddonCategory) => {
+    if (category) {
+      return addonService.listAddonsByCategory(category);
+    }
+    return addonService.listAddons();
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_GET_DETAILS, async (_event, slug: string) => {
+    return addonService.getAddonDetails(slug);
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_INSTALL, async (_event, sourcePath: string) => {
+    const addon = await pluginLoader.installAddon(sourcePath);
+    setInstalledAddons(pluginLoader.getRegisteredAddons());
+    return addon;
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_UNINSTALL, async (_event, addonId: string) => {
+    await pluginLoader.uninstallAddon(addonId);
+    setInstalledAddons(pluginLoader.getRegisteredAddons());
+    return true;
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_ENABLE, async (_event, addonId: string) => {
+    await pluginLoader.enableAddon(addonId);
+    setInstalledAddons(pluginLoader.getRegisteredAddons());
+    return true;
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_DISABLE, async (_event, addonId: string) => {
+    await pluginLoader.disableAddon(addonId);
+    setInstalledAddons(pluginLoader.getRegisteredAddons());
+    return true;
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_GET_INSTALLED, async () => {
+    return pluginLoader.getRegisteredAddons();
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_GET_SETTINGS, async (_event, addonId: string) => {
+    return pluginLoader.getAddonSettings(addonId);
+  });
+
+  ipcMain.handle(
+    IpcChannel.ADDON_SAVE_SETTINGS,
+    async (_event, addonId: string, settings: Record<string, string | number | boolean>) => {
+      pluginLoader.saveAddonSettings(addonId, settings);
+      const allSettings = getAddonSettings();
+      allSettings[addonId] = settings;
+      setAddonSettings(allSettings);
+      return true;
+    },
+  );
+
+  ipcMain.handle(IpcChannel.ADDON_LIST_MY, async () => {
+    return addonService.listMyAddons();
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_CHECK_OWNED, async (_event, slug: string) => {
+    return addonService.checkAddon(slug);
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_PURCHASE, async (_event, addonId: string) => {
+    return addonService.purchaseAddon(addonId);
+  });
+
+  ipcMain.handle(IpcChannel.ADDON_CHECK_UPDATES, async () => {
+    const installed = pluginLoader.getRegisteredAddons();
+    const mapped = installed.map((a) => ({
+      slug: a.manifest.marketplaceSlug ?? a.manifest.id,
+      version: a.manifest.version,
+    }));
+    return addonService.checkForUpdates(mapped);
   });
 }
