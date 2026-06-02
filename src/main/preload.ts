@@ -91,6 +91,36 @@ const electronAPI = {
       ipcRenderer.invoke(IpcChannel.KEYSTONE_RESET, projectorId),
   },
 
+  // ─── Addon System ──────────────────────────────────────────────────────
+  addon: {
+    listMarketplace: (category?: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_LIST_MARKETPLACE, category),
+    getDetails: (slug: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_GET_DETAILS, slug),
+    install: (sourcePath: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_INSTALL, sourcePath),
+    uninstall: (addonId: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_UNINSTALL, addonId),
+    enable: (addonId: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_ENABLE, addonId),
+    disable: (addonId: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_DISABLE, addonId),
+    getInstalled: () =>
+      ipcRenderer.invoke(IpcChannel.ADDON_GET_INSTALLED),
+    getSettings: (addonId: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_GET_SETTINGS, addonId),
+    saveSettings: (addonId: string, settings: Record<string, unknown>) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_SAVE_SETTINGS, addonId, settings),
+    listMyAddons: () =>
+      ipcRenderer.invoke(IpcChannel.ADDON_LIST_MY),
+    checkAddon: (slug: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_CHECK_OWNED, slug),
+    purchase: (addonId: string) =>
+      ipcRenderer.invoke(IpcChannel.ADDON_PURCHASE, addonId),
+    checkUpdates: () =>
+      ipcRenderer.invoke(IpcChannel.ADDON_CHECK_UPDATES),
+  },
+
   // ─── App ──────────────────────────────────────────────────────────────
   app: {
     getVersion: () => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),

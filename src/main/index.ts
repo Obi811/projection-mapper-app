@@ -16,10 +16,12 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { registerIpcHandlers } from './ipc';
-import { initStore, getProjectorConfigs, getKeystoneConfigs, getKeystonePresets } from './store';
+import { initStore, getProjectorConfigs, getKeystoneConfigs, getKeystonePresets, getInstalledAddons, setInstalledAddons, getAddonSettings, setAddonSettings } from './store';
 import { loadConfigs } from '../services/output-manager';
 import { loadConfigs as loadKeystoneConfigs, loadPresets as loadKeystonePresets } from '../services/keystone-service';
+import { configurePluginLoader, initializeRegistry, shutdownAll } from '../services/plugin-loader';
 import { closeAllProjectorWindows } from './projector-window';
+import { ADDON_DIR_NAME } from '../shared/constants';
 import {
   DEFAULT_WINDOW_WIDTH,
   DEFAULT_WINDOW_HEIGHT,
@@ -86,6 +88,28 @@ app.whenReady().then(() => {
     loadKeystonePresets(savedKeystonePresets);
   }
 
+  // Initialise addon plugin loader
+  const addonsDir = path.join(app.getPath('userData'), ADDON_DIR_NAME);
+  configurePluginLoader({
+    addonsDir,
+    storage: {
+      getInstalledAddons,
+      setInstalledAddons,
+      getAddonData: (addonId: string) => {
+        const all = getAddonSettings();
+        return all[addonId] ?? {};
+      },
+      setAddonData: (addonId: string, data: Record<string, unknown>) => {
+        const all = getAddonSettings();
+        all[addonId] = data;
+        setAddonSettings(all);
+      },
+    },
+  });
+  initializeRegistry().catch((err) =>
+    console.error('[addon] Failed to initialise addon registry:', err),
+  );
+
   registerIpcHandlers();
   createWindow();
 
@@ -97,8 +121,9 @@ app.whenReady().then(() => {
   });
 });
 
-// Close all projector windows before quitting
+// Close all projector windows and shutdown addons before quitting
 app.on('before-quit', () => {
+  shutdownAll();
   closeAllProjectorWindows();
 });
 

@@ -29,7 +29,7 @@ Professional projection mapping desktop application for Mac and Windows, built w
 - 🔲 Media import (images, videos, GIFs)
 - 🔲 Audio-reactive sync
 - 🔲 DMX lighting integration
-- 🔲 Addon runtime & marketplace UI
+- ✅ Addon runtime & marketplace UI
 - 🔲 Remote control (mobile companion)
 - 🔲 Project save/load (.pmp files)
 - 🔲 Fullscreen output mode (per-display)
