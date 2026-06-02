@@ -235,11 +235,11 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            build_cmd: npm run package:mac
+            platform_flag: --mac
           - os: windows-latest
-            build_cmd: npm run package:win
+            platform_flag: --win
           - os: ubuntu-latest
-            build_cmd: npm run package:linux
+            platform_flag: --linux
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -255,7 +255,7 @@ jobs:
       - run: npm run build
 
       - name: Package
-        run: ${{ matrix.build_cmd }} --publish never
+        run: npx electron-builder ${{ matrix.platform_flag }} --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
