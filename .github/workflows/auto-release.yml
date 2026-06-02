@@ -1,0 +1,271 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit Tests
+        run: npm test
+
+  analyze:
+    name: Analyze Commits
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.analyze.outputs.should_release }}
+      bump_type: ${{ steps.analyze.outputs.bump_type }}
+      new_version: ${{ steps.analyze.outputs.new_version }}
+      release_notes: ${{ steps.analyze.outputs.release_notes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Analyze conventional commits
+        id: analyze
+        run: |
+          set -e
+
+          BRANCH="${GITHUB_REF_NAME}"
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          BASE_VERSION=$(echo "$CURRENT_VERSION" | sed 's/-.*$//')
+          MAJOR=$(echo "$BASE_VERSION" | cut -d. -f1)
+          MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
+          PATCH=$(echo "$BASE_VERSION" | cut -d. -f3)
+
+          echo "Branch: $BRANCH"
+          echo "Current version: $CURRENT_VERSION"
+
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --oneline --format="%s")
+          else
+            COMMITS=$(git log "${LAST_TAG}..HEAD" --oneline --format="%s")
+          fi
+
+          echo "Commits since last tag ($LAST_TAG):"
+          echo "$COMMITS"
+
+          if [ -z "$COMMITS" ]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "No new commits since last tag."
+            exit 0
+          fi
+
+          BUMP="none"
+          HAS_BREAKING=$(echo "$COMMITS" | grep -iE "^[a-z]+(\(.+\))?!:" || true)
+          HAS_FEAT=$(echo "$COMMITS" | grep -iE "^feat(\(.+\))?:" || true)
+          HAS_FIX=$(echo "$COMMITS" | grep -iE "^fix(\(.+\))?:" || true)
+          HAS_PERF=$(echo "$COMMITS" | grep -iE "^perf(\(.+\))?:" || true)
+
+          if [ -n "$HAS_BREAKING" ]; then
+            BUMP="major"
+          elif [ -n "$HAS_FEAT" ]; then
+            BUMP="minor"
+          elif [ -n "$HAS_FIX" ] || [ -n "$HAS_PERF" ]; then
+            BUMP="patch"
+          fi
+
+          if [ "$BUMP" = "none" ]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "No release-worthy commits found."
+            exit 0
+          fi
+
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW_BASE="${MAJOR}.${MINOR}.${PATCH}"
+
+          if [ "$BRANCH" = "develop" ]; then
+            BETA_NUM=1
+            while git tag -l "v${NEW_BASE}-beta.${BETA_NUM}" | grep -q .; do
+              BETA_NUM=$((BETA_NUM + 1))
+            done
+            NEW_VERSION="${NEW_BASE}-beta.${BETA_NUM}"
+          else
+            NEW_VERSION="$NEW_BASE"
+          fi
+
+          echo "Bump type: $BUMP"
+          echo "New version: $NEW_VERSION"
+
+          NOTES="## What's Changed\n\n"
+
+          FEATS=$(echo "$COMMITS" | grep -iE "^feat(\(.+\))?:" | sed 's/^feat(\(.*\)):\s*//' | sed 's/^feat:\s*//' || true)
+          if [ -n "$FEATS" ]; then
+            NOTES="${NOTES}### Features\n"
+            while IFS= read -r line; do
+              [ -n "$line" ] && NOTES="${NOTES}- ${line}\n"
+            done <<< "$FEATS"
+            NOTES="${NOTES}\n"
+          fi
+
+          FIXES=$(echo "$COMMITS" | grep -iE "^fix(\(.+\))?:" | sed 's/^fix(\(.*\)):\s*//' | sed 's/^fix:\s*//' || true)
+          if [ -n "$FIXES" ]; then
+            NOTES="${NOTES}### Bug Fixes\n"
+            while IFS= read -r line; do
+              [ -n "$line" ] && NOTES="${NOTES}- ${line}\n"
+            done <<< "$FIXES"
+            NOTES="${NOTES}\n"
+          fi
+
+          PERFS=$(echo "$COMMITS" | grep -iE "^perf(\(.+\))?:" | sed 's/^perf(\(.*\)):\s*//' | sed 's/^perf:\s*//' || true)
+          if [ -n "$PERFS" ]; then
+            NOTES="${NOTES}### Performance\n"
+            while IFS= read -r line; do
+              [ -n "$line" ] && NOTES="${NOTES}- ${line}\n"
+            done <<< "$PERFS"
+            NOTES="${NOTES}\n"
+          fi
+
+          if [ -n "$HAS_BREAKING" ]; then
+            NOTES="${NOTES}### Breaking Changes\n"
+            while IFS= read -r line; do
+              [ -n "$line" ] && NOTES="${NOTES}- ${line}\n"
+            done <<< "$HAS_BREAKING"
+            NOTES="${NOTES}\n"
+          fi
+
+          OTHERS=$(echo "$COMMITS" | grep -iE "^(docs|style|refactor|test|build|ci|chore|revert)(\(.+\))?:" || true)
+          if [ -n "$OTHERS" ]; then
+            NOTES="${NOTES}### Other Changes\n"
+            while IFS= read -r line; do
+              [ -n "$line" ] && NOTES="${NOTES}- ${line}\n"
+            done <<< "$OTHERS"
+            NOTES="${NOTES}\n"
+          fi
+
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "bump_type=$BUMP" >> "$GITHUB_OUTPUT"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+          EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 2>/dev/null | base64)
+          echo "release_notes<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+          echo -e "$NOTES" >> "$GITHUB_OUTPUT"
+          echo "${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Release
+    needs: analyze
+    if: needs.analyze.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        run: |
+          NEW_VERSION="${{ needs.analyze.outputs.new_version }}"
+          npm version "$NEW_VERSION" --no-git-tag-version
+          git add package.json package-lock.json
+          git commit -m "chore(release): v${NEW_VERSION}"
+          git tag "v${NEW_VERSION}"
+
+      - name: Push version commit and tag
+        run: |
+          git push origin ${{ github.ref_name }}
+          git push origin "v${{ needs.analyze.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.analyze.outputs.new_version }}
+          name: v${{ needs.analyze.outputs.new_version }}
+          body: ${{ needs.analyze.outputs.release_notes }}
+          prerelease: ${{ github.ref_name == 'develop' }}
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-binaries:
+    name: Build ${{ matrix.os }}
+    needs: [analyze, release]
+    if: needs.analyze.outputs.should_release == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            build_cmd: npm run package:mac
+          - os: windows-latest
+            build_cmd: npm run package:win
+          - os: ubuntu-latest
+            build_cmd: npm run package:linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.analyze.outputs.new_version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Package
+        run: ${{ matrix.build_cmd }}
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.analyze.outputs.new_version }}
+          files: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
