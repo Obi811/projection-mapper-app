@@ -3,7 +3,11 @@
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,10 +18,21 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/shared/*"],
-      "@services/*": ["src/services/*"]
+      "@shared/*": [
+        "src/shared/*"
+      ],
+      "@services/*": [
+        "src/services/*"
+      ]
     }
   },
-  "include": ["src/main/**/*.ts", "src/shared/**/*.ts", "src/services/**/*.ts"],
-  "exclude": ["node_modules", "src/renderer/**/*"]
+  "include": [
+    "src/main/**/*.ts",
+    "src/shared/**/*.ts",
+    "src/services/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/renderer/**/*"
+  ]
 }
