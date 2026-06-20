@@ -95,10 +95,9 @@
         "dmg",
         "zip"
       ],
-      "hardenedRuntime": true,
+      "identity": null,
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": {
         "NSCameraUsageDescription": "Projection Mapper benötigt keinen Kamerazugriff.",
         "NSMicrophoneUsageDescription": "Projection Mapper kann Audio für die Audio-Synchronisierung verwenden.",
