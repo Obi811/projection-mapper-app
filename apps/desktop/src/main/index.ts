@@ -65,6 +65,12 @@ function createWindow(): void {
     mainWindow.loadFile(indexPath).catch((err) => {
       console.error('[Main] Failed to load index.html:', err);
     });
+    
+    // Temporarily open DevTools in production for debugging
+    // TODO: Remove this after license activation issue is fixed
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow?.webContents.openDevTools({ mode: 'detach' });
+    });
   }
 
   mainWindow.on('closed', () => {
