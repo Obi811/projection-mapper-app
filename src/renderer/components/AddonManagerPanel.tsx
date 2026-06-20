@@ -71,10 +71,10 @@ export const AddonManagerPanel: React.FC<AddonManagerPanelProps> = ({
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Addons</h3>
         <p style={styles.placeholder}>
-          Addon system requires a premium license.
+          Das Addon-System erfordert eine Premium-Lizenz.
         </p>
         <button style={styles.upgradeButton} onClick={onUpgradePrompt}>
-          Upgrade License
+          Lizenz upgraden
         </button>
       </div>
     );
@@ -85,11 +85,11 @@ export const AddonManagerPanel: React.FC<AddonManagerPanelProps> = ({
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Addons</h3>
 
-        {loading && <p style={styles.placeholder}>Loading addons…</p>}
+        {loading && <p style={styles.placeholder}>Addons werden geladen…</p>}
 
         {!loading && installed.length === 0 && (
           <p style={styles.placeholder}>
-            No addons installed. Browse the marketplace to get started.
+            Keine Addons installiert. Durchstöbere den Marktplatz, um zu starten.
           </p>
         )}
 
@@ -118,7 +118,7 @@ export const AddonManagerPanel: React.FC<AddonManagerPanelProps> = ({
                 e.stopPropagation();
                 handleToggle(addon);
               }}
-              title={addon.state === 'enabled' || addon.state === 'loaded' ? 'Disable' : 'Enable'}
+              title={addon.state === 'enabled' || addon.state === 'loaded' ? 'Deaktivieren' : 'Aktivieren'}
             >
               {addon.state === 'enabled' || addon.state === 'loaded' ? 'ON' : 'OFF'}
             </button>
@@ -129,7 +129,7 @@ export const AddonManagerPanel: React.FC<AddonManagerPanelProps> = ({
           style={styles.marketplaceButton}
           onClick={() => setShowMarketplace(true)}
         >
-          Browse Marketplace
+          Marktplatz durchsuchen
         </button>
       </div>
 

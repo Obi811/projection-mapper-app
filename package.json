@@ -50,6 +50,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
+    "@electron/notarize": "^2.5.0",
     "@playwright/test": "^1.48.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
@@ -85,7 +86,16 @@
       "target": [
         "dmg",
         "zip"
-      ]
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": {
+        "NSCameraUsageDescription": "Projection Mapper benötigt keinen Kamerazugriff.",
+        "NSMicrophoneUsageDescription": "Projection Mapper kann Audio für die Audio-Synchronisierung verwenden.",
+        "LSMinimumSystemVersion": "10.15.0"
+      }
     },
     "win": {
       "target": [
@@ -98,6 +108,7 @@
         "AppImage",
         "deb"
       ]
-    }
+    },
+    "afterSign": "build/notarize.js"
   }
 }

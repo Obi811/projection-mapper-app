@@ -35,7 +35,7 @@ export const AddonMarketplace: React.FC<AddonMarketplaceProps> = ({
         const result = await window.electronAPI.addon.listMarketplace(cat);
         setAddons(result ?? []);
       } catch (err) {
-        setError('Failed to load marketplace. Please try again.');
+        setError('Marktplatz konnte nicht geladen werden. Bitte versuchen Sie es erneut.');
         console.error('[Marketplace] Fetch error:', err);
       } finally {
         setLoading(false);
@@ -63,7 +63,7 @@ export const AddonMarketplace: React.FC<AddonMarketplaceProps> = ({
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={styles.header}>
-          <h2 style={styles.title}>Addon Marketplace</h2>
+          <h2 style={styles.title}>Addon-Marktplatz</h2>
           <button style={styles.closeButton} onClick={onClose}>
             ✕
           </button>
@@ -80,17 +80,17 @@ export const AddonMarketplace: React.FC<AddonMarketplaceProps> = ({
               }}
               onClick={() => setCategory(cat)}
             >
-              {cat === 'all' ? 'All' : (ADDON_CATEGORY_LABELS[cat] ?? cat)}
+              {cat === 'all' ? 'Alle' : (ADDON_CATEGORY_LABELS[cat] ?? cat)}
             </button>
           ))}
         </div>
 
         {/* Content */}
         <div style={styles.content}>
-          {loading && <p style={styles.placeholder}>Loading addons…</p>}
+          {loading && <p style={styles.placeholder}>Addons werden geladen …</p>}
           {error && <p style={styles.errorText}>{error}</p>}
           {!loading && !error && addons.length === 0 && (
-            <p style={styles.placeholder}>No addons found in this category.</p>
+            <p style={styles.placeholder}>Keine Addons in dieser Kategorie gefunden.</p>
           )}
 
           <div style={styles.grid}>
@@ -103,18 +103,18 @@ export const AddonMarketplace: React.FC<AddonMarketplaceProps> = ({
                   </span>
                 </div>
                 <p style={styles.cardDescription}>
-                  {addon.description ?? 'No description available.'}
+                  {addon.description ?? 'Keine Beschreibung verfügbar.'}
                 </p>
                 <div style={styles.cardFooter}>
                   <span style={styles.cardAuthor}>
-                    by {addon.author ?? 'Unknown'}
+                    von {addon.author ?? 'Unbekannt'}
                   </span>
                   <button
                     style={styles.installButton}
                     onClick={() => handleInstall(addon)}
                     disabled={installing === addon.id}
                   >
-                    {installing === addon.id ? 'Installing…' : 'Install'}
+                    {installing === addon.id ? 'Wird installiert …' : 'Installieren'}
                   </button>
                 </div>
               </div>

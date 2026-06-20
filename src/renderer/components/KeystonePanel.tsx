@@ -141,15 +141,15 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
     return (
       <div style={styles.section}>
         <div style={styles.headerRow}>
-          <h3 style={styles.sectionTitle}>Keystone Correction</h3>
+          <h3 style={styles.sectionTitle}>Keystone-Korrektur</h3>
           <span style={styles.premiumBadge}>PREMIUM</span>
         </div>
         <p style={styles.placeholder}>
-          Keystone correction allows you to adjust projection corners
+          Mit der Keystone-Korrektur kannst du die Projektionsecken anpassen,
           for perfect alignment on angled surfaces.
         </p>
         <button style={styles.upgradeButton} onClick={onUpgradePrompt}>
-          🔓 Upgrade to Premium
+          🔓 Auf Premium upgraden
         </button>
       </div>
     );
@@ -158,13 +158,13 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
   return (
     <div style={styles.section}>
       <div style={styles.headerRow}>
-        <h3 style={styles.sectionTitle}>Keystone Correction</h3>
+        <h3 style={styles.sectionTitle}>Keystone-Korrektur</h3>
         <span style={styles.premiumBadge}>PREMIUM</span>
       </div>
 
       {/* Enable/Disable toggle */}
       <label style={styles.toggleRow}>
-        <span style={styles.toggleLabel}>Enabled</span>
+        <span style={styles.toggleLabel}>Aktiviert</span>
         <input
           type="checkbox"
           checked={enabled}
@@ -182,7 +182,7 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
         onClick={() => onEditModeChange(!editModeActive)}
         disabled={!enabled}
       >
-        {editModeActive ? '✓ Editing Corners' : '◇ Edit Corners'}
+        {editModeActive ? '✓ Ecken werden bearbeitet' : '◇ Ecken bearbeiten'}
       </button>
 
       {/* Corner values */}
@@ -228,7 +228,7 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
 
       {/* Snap-to-grid toggle */}
       <label style={styles.toggleRow}>
-        <span style={styles.toggleLabel}>Snap to Grid</span>
+        <span style={styles.toggleLabel}>Am Raster ausrichten</span>
         <input
           type="checkbox"
           checked={snapEnabled}
@@ -239,7 +239,7 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
 
       {/* Mesh subdivisions */}
       <label style={styles.label}>
-        Mesh Quality: {subdivisions}
+        Netzqualität: {subdivisions}
         <input
           type="range"
           min={1}
@@ -252,7 +252,7 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
 
       {/* Reset button */}
       <button style={styles.resetButton} onClick={onReset}>
-        ↺ Reset to Default
+        ↺ Auf Standard zurücksetzen
       </button>
 
       {/* Presets section */}
@@ -261,7 +261,7 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
           style={styles.presetsToggle}
           onClick={() => setShowPresets(!showPresets)}
         >
-          {showPresets ? '▾' : '▸'} Presets ({presets.length})
+          {showPresets ? '▾' : '▸'} Voreinstellungen ({presets.length})
         </button>
 
         {showPresets && (
@@ -272,7 +272,7 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
                 type="text"
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
-                placeholder="Preset name..."
+                placeholder="Name der Voreinstellung…"
                 style={styles.presetInput}
                 onKeyDown={(e) => e.key === 'Enter' && handleSavePreset()}
               />
@@ -287,7 +287,7 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
 
             {/* Preset list */}
             {presets.length === 0 ? (
-              <p style={styles.noPresets}>No presets saved yet</p>
+              <p style={styles.noPresets}>Noch keine Voreinstellungen gespeichert</p>
             ) : (
               <div style={styles.presetList}>
                 {presets.map((preset) => (
@@ -295,14 +295,14 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
                     <button
                       style={styles.presetLoadButton}
                       onClick={() => handleLoadPreset(preset)}
-                      title={`Load "${preset.name}"`}
+                      title={`„${preset.name}“ laden`}
                     >
                       {preset.name}
                     </button>
                     <button
                       style={styles.presetDeleteButton}
                       onClick={() => handleDeletePreset(preset.id)}
-                      title="Delete preset"
+                      title="Voreinstellung löschen"
                     >
                       ✕
                     </button>
@@ -317,10 +317,10 @@ export const KeystonePanel: React.FC<KeystonePanelProps> = ({
       {/* Keyboard shortcuts hint */}
       {editModeActive && (
         <div style={styles.shortcutHint}>
-          <p>Arrow keys: Move selected corner</p>
-          <p>Shift+Arrow: Fine adjustment</p>
-          <p>Tab: Cycle corners</p>
-          <p>Esc: Deselect</p>
+          <p>Pfeiltasten: Ausgewählte Ecke bewegen</p>
+          <p>Umschalt+Pfeil: Feinjustierung</p>
+          <p>Tab: Ecken durchschalten</p>
+          <p>Esc: Auswahl aufheben</p>
         </div>
       )}
     </div>

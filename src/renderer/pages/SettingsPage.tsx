@@ -1,0 +1,295 @@
+/**
+ * SettingsPage — Einstellungen, Lizenz, Profil und App-Informationen.
+ */
+
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useFeatureGate } from '../hooks/useFeatureGate';
+import { useAppVersion } from '../hooks/useAppVersion';
+import { API_BASE_URL } from '../../shared/constants';
+
+const FEATURE_LABELS: Record<string, string> = {
+  basic_projection: 'Basis-Projektion',
+  text_overlay: 'Text-Overlay',
+  media_import: 'Medien-Import',
+  gif_support: 'GIF-Unterstützung',
+  multi_surface: 'Multi-Projektor',
+  keystone_correction: 'Keystone-Korrektur',
+  audio_sync: 'Audio-Synchronisation',
+  dmx_support: 'DMX-Unterstützung',
+  addon_system: 'Addon-System',
+  remote_control: 'Fernsteuerung',
+};
+
+export const SettingsPage: React.FC = () => {
+  const { user, logout } = useAuth();
+  const { features, refresh } = useFeatureGate();
+  const version = useAppVersion();
+
+  const [licenseKey, setLicenseKey] = useState('');
+  const [activating, setActivating] = useState(false);
+  const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(
+    null,
+  );
+
+  const handleActivate = async () => {
+    if (!licenseKey.trim()) {
+      setMessage({ type: 'err', text: 'Bitte gib einen Lizenzschlüssel ein.' });
+      return;
+    }
+    setActivating(true);
+    setMessage(null);
+    try {
+      if (window.electronAPI?.license) {
+        const result = await window.electronAPI.license.activate(licenseKey.trim());
+        if (result && (result.valid ?? result.success)) {
+          setMessage({
+            type: 'ok',
+            text: 'Lizenz erfolgreich aktiviert! Funktionen wurden freigeschaltet.',
+          });
+          setLicenseKey('');
+          await refresh();
+        } else {
+          setMessage({
+            type: 'err',
+            text: result?.message || 'Lizenzschlüssel ungültig oder abgelaufen.',
+          });
+        }
+      } else {
+        setMessage({
+          type: 'err',
+          text: 'Lizenzaktivierung ist nur in der Desktop-App verfügbar.',
+        });
+      }
+    } catch {
+      setMessage({
+        type: 'err',
+        text: 'Aktivierung fehlgeschlagen. Prüfe deine Internetverbindung.',
+      });
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const displayName = user?.name || 'Nicht angegeben';
+
+  return (
+    <div style={styles.scroll}>
+      <div style={styles.container}>
+        <h2 style={styles.title}>Einstellungen</h2>
+
+        {/* Profil */}
+        <section style={styles.card}>
+          <h3 style={styles.cardTitle}>Profil</h3>
+          <div style={styles.row}>
+            <span style={styles.rowLabel}>Name</span>
+            <span style={styles.rowValue}>{displayName}</span>
+          </div>
+          <div style={styles.row}>
+            <span style={styles.rowLabel}>E-Mail</span>
+            <span style={styles.rowValue}>{user?.email ?? '—'}</span>
+          </div>
+          {user?.createdAt && (
+            <div style={styles.row}>
+              <span style={styles.rowLabel}>Mitglied seit</span>
+              <span style={styles.rowValue}>
+                {new Date(user.createdAt).toLocaleDateString('de-DE')}
+              </span>
+            </div>
+          )}
+          <button style={styles.logoutButton} onClick={logout}>
+            ⏻ Abmelden
+          </button>
+        </section>
+
+        {/* Lizenz */}
+        <section style={styles.card}>
+          <h3 style={styles.cardTitle}>Lizenz</h3>
+          <p style={styles.cardText}>
+            Gib deinen Lizenzschlüssel ein, um Premium-Funktionen wie
+            Multi-Projektor, Keystone-Korrektur und das Addon-System
+            freizuschalten.
+          </p>
+          <div style={styles.licenseRow}>
+            <input
+              type="text"
+              value={licenseKey}
+              onChange={(e) => setLicenseKey(e.target.value)}
+              placeholder="XXXX-XXXX-XXXX-XXXX"
+              style={styles.input}
+              disabled={activating}
+            />
+            <button
+              style={{
+                ...styles.activateButton,
+                opacity: activating ? 0.6 : 1,
+              }}
+              onClick={handleActivate}
+              disabled={activating}
+            >
+              {activating ? 'Aktiviere…' : 'Aktivieren'}
+            </button>
+          </div>
+          {message && (
+            <p
+              style={{
+                ...styles.message,
+                color: message.type === 'ok' ? '#22c55e' : '#f87171',
+                backgroundColor:
+                  message.type === 'ok'
+                    ? 'rgba(34, 197, 94, 0.1)'
+                    : 'rgba(239, 68, 68, 0.1)',
+              }}
+            >
+              {message.text}
+            </p>
+          )}
+        </section>
+
+        {/* Freigeschaltete Funktionen */}
+        <section style={styles.card}>
+          <h3 style={styles.cardTitle}>Freigeschaltete Funktionen</h3>
+          {features.length === 0 ? (
+            <p style={styles.cardText}>
+              Aktuell sind keine Funktionen aktiv. Aktiviere eine Lizenz, um
+              loszulegen.
+            </p>
+          ) : (
+            <div style={styles.featureList}>
+              {features.map((f) => (
+                <span key={f} style={styles.featureChip}>
+                  ✓ {FEATURE_LABELS[f] ?? f}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Über die App */}
+        <section style={styles.card}>
+          <h3 style={styles.cardTitle}>Über Projection Mapper</h3>
+          <div style={styles.row}>
+            <span style={styles.rowLabel}>Version</span>
+            <span style={styles.rowValue}>v{version}</span>
+          </div>
+          <div style={styles.row}>
+            <span style={styles.rowLabel}>API-Server</span>
+            <span style={styles.rowValue}>{API_BASE_URL}</span>
+          </div>
+          <div style={styles.row}>
+            <span style={styles.rowLabel}>Lizenztyp</span>
+            <span style={styles.rowValue}>MIT</span>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  scroll: { width: '100%', height: '100%', overflowY: 'auto' },
+  container: {
+    maxWidth: 720,
+    margin: '0 auto',
+    padding: 28,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 20,
+  },
+  title: { fontSize: 22, fontWeight: 700, color: '#e4e4e7', margin: 0 },
+  card: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#1a1a2e',
+    border: '1px solid #27272a',
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: 600,
+    color: '#e4e4e7',
+    margin: 0,
+    paddingBottom: 8,
+    borderBottom: '1px solid #27272a',
+  },
+  cardText: {
+    fontSize: 13,
+    color: '#a1a1aa',
+    lineHeight: 1.6,
+    margin: 0,
+  },
+  row: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: 13,
+  },
+  rowLabel: { color: '#71717a' },
+  rowValue: {
+    color: '#e4e4e7',
+    fontWeight: 500,
+    maxWidth: '60%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  logoutButton: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    padding: '8px 16px',
+    borderRadius: 8,
+    border: '1px solid rgba(248, 113, 113, 0.4)',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    color: '#f87171',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'pointer',
+  },
+  licenseRow: {
+    display: 'flex',
+    gap: 8,
+  },
+  input: {
+    flex: 1,
+    padding: '10px 12px',
+    borderRadius: 8,
+    border: '1px solid #27272a',
+    backgroundColor: '#0d0d0d',
+    color: '#e4e4e7',
+    fontSize: 13,
+    fontFamily: 'var(--font-mono)',
+    outline: 'none',
+  },
+  activateButton: {
+    padding: '10px 18px',
+    borderRadius: 8,
+    border: 'none',
+    backgroundColor: '#6366f1',
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  message: {
+    fontSize: 12,
+    padding: '8px 12px',
+    borderRadius: 6,
+    margin: 0,
+  },
+  featureList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  featureChip: {
+    fontSize: 12,
+    color: '#a5b4fc',
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    border: '1px solid rgba(99, 102, 241, 0.3)',
+    borderRadius: 6,
+    padding: '5px 10px',
+  },
+};
