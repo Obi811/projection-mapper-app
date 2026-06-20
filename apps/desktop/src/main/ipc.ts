@@ -9,6 +9,7 @@
  */
 
 import { ipcMain, app, dialog } from 'electron';
+import * as os from 'os';
 import { IpcChannel } from '../shared/types';
 import type { ProjectorConfig, KeystoneCorners, AddonCategory } from '../shared/types';
 import * as authService from '../services/auth-service';
@@ -141,7 +142,12 @@ export function registerIpcHandlers(): void {
     IpcChannel.LICENSE_ACTIVATE,
     async (_event, licenseKey: string) => {
       const deviceId = getDeviceId();
-      const result = await licenseService.activateLicense(licenseKey, deviceId);
+      const deviceName = `${os.hostname()} (${os.platform()})`;
+      const result = await licenseService.activateLicense(
+        licenseKey,
+        deviceId,
+        deviceName,
+      );
 
       if (result.success && result.features) {
         setLicenseData(licenseKey, result.features);

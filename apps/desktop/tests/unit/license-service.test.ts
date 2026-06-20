@@ -2,13 +2,24 @@
  * Unit tests for the License Service — feature gating logic.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock the HTTP client so we can assert the exact request bodies.
+const postMock = vi.fn();
+vi.mock('@services/api-client', () => ({
+  apiClient: {
+    post: (...args: unknown[]) => postMock(...args),
+  },
+}));
+
 import {
   setEnabledFeatures,
   hasFeature,
   getEnabledFeatures,
   clearFeatures,
   generateDeviceId,
+  validateLicense,
+  activateLicense,
 } from '@services/license-service';
 import type { FeatureFlag } from '@shared/types';
 
@@ -89,6 +100,72 @@ describe('License Service', () => {
       setEnabledFeatures(['basic_projection']);
       expect(hasFeature('text_overlay')).toBe(false);
       expect(hasFeature('basic_projection')).toBe(true);
+    });
+  });
+
+  /**
+   * Regression: the Obitron API rejected camelCase bodies with HTTP 400
+   * ("property licenseKey should not exist ... license_key must be a string").
+   * These tests lock the snake_case request contract for both endpoints.
+   */
+  describe('API request body format (snake_case)', () => {
+    beforeEach(() => {
+      postMock.mockReset();
+    });
+
+    it('validateLicense sends license_key + device_id (NO device_name)', async () => {
+      postMock.mockResolvedValue({
+        data: { valid: true, license: null, features: [] },
+      });
+
+      await validateLicense('PM-XXXX', 'dev-1');
+
+      expect(postMock).toHaveBeenCalledWith('/licenses/validate', {
+        license_key: 'PM-XXXX',
+        device_id: 'dev-1',
+      });
+      // Must NOT include device_name (validate endpoint rejects it).
+      const body = postMock.mock.calls[0][1];
+      expect(body).not.toHaveProperty('device_name');
+      expect(body).not.toHaveProperty('licenseKey');
+      expect(body).not.toHaveProperty('deviceId');
+    });
+
+    it('activateLicense sends license_key + device_id + device_name', async () => {
+      postMock.mockResolvedValue({
+        data: { success: true, license: null, features: [] },
+      });
+
+      await activateLicense('PM-XXXX', 'dev-1', 'MacBook (darwin)');
+
+      expect(postMock).toHaveBeenCalledWith('/licenses/activate', {
+        license_key: 'PM-XXXX',
+        device_id: 'dev-1',
+        device_name: 'MacBook (darwin)',
+      });
+      const body = postMock.mock.calls[0][1];
+      expect(body).not.toHaveProperty('licenseKey');
+      expect(body).not.toHaveProperty('deviceId');
+    });
+
+    it('normalizes a snake_case success response into valid/success/features', async () => {
+      // Server returns only `success` — app code checks both valid & success.
+      postMock.mockResolvedValue({
+        data: { success: true, features: ['keystone_correction'] },
+      });
+
+      const result = await activateLicense('PM-XXXX', 'dev-1', 'Box');
+      expect(result.valid).toBe(true);
+      expect(result.success).toBe(true);
+      expect(result.features).toEqual(['keystone_correction']);
+    });
+
+    it('defaults features to [] when the response omits them', async () => {
+      postMock.mockResolvedValue({ data: { valid: true } });
+
+      const result = await validateLicense('PM-XXXX', 'dev-1');
+      expect(result.valid).toBe(true);
+      expect(result.features).toEqual([]);
     });
   });
 });

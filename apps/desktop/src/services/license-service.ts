@@ -39,6 +39,39 @@ export function generateDeviceId(): string {
   });
 }
 
+// ─── Response normalization ───────────────────────────────────────────────
+
+/**
+ * Raw API response shape — the Obitron backend may return either snake_case
+ * or camelCase keys depending on the endpoint, so we accept both and normalize.
+ */
+interface RawLicenseResponse {
+  valid?: boolean;
+  success?: boolean;
+  license?: unknown;
+  features?: FeatureFlag[] | null;
+  [key: string]: unknown;
+}
+
+/**
+ * Normalize a raw license API response into the app's camelCase shape.
+ * Ensures `valid`, `success` and `features` are always well-defined so the
+ * downstream UI / IPC logic never crashes on missing fields.
+ */
+function normalizeLicenseResponse(
+  raw: RawLicenseResponse,
+): LicenseValidationResponse & LicenseActivationResponse {
+  const ok = raw.valid ?? raw.success ?? false;
+  const features = Array.isArray(raw.features) ? raw.features : [];
+  return {
+    valid: ok,
+    success: ok,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    license: (raw.license ?? null) as any,
+    features,
+  };
+}
+
 // ─── Validation ─────────────────────────────────────────────────────────────
 
 /**
@@ -52,11 +85,14 @@ export async function validateLicense(
   licenseKey: string,
   deviceId: string,
 ): Promise<LicenseValidationResponse> {
-  const { data } = await apiClient.post<LicenseValidationResponse>(
+  // NOTE: The Obitron API uses snake_case field names.
+  // The /licenses/validate endpoint expects ONLY license_key + device_id
+  // (it rejects an extra device_name property with HTTP 400).
+  const { data } = await apiClient.post<RawLicenseResponse>(
     '/licenses/validate',
-    { licenseKey, deviceId },
+    { license_key: licenseKey, device_id: deviceId },
   );
-  return data;
+  return normalizeLicenseResponse(data) as LicenseValidationResponse;
 }
 
 /**
@@ -64,16 +100,20 @@ export async function validateLicense(
  *
  * @param licenseKey - The user's license key string
  * @param deviceId   - This machine's persisted device identifier
+ * @param deviceName - Human-readable device name (e.g. hostname)
  */
 export async function activateLicense(
   licenseKey: string,
   deviceId: string,
+  deviceName: string,
 ): Promise<LicenseActivationResponse> {
-  const { data } = await apiClient.post<LicenseActivationResponse>(
+  // NOTE: The Obitron API uses snake_case field names.
+  // The /licenses/activate endpoint REQUIRES license_key + device_id + device_name.
+  const { data } = await apiClient.post<RawLicenseResponse>(
     '/licenses/activate',
-    { licenseKey, deviceId },
+    { license_key: licenseKey, device_id: deviceId, device_name: deviceName },
   );
-  return data;
+  return normalizeLicenseResponse(data) as LicenseActivationResponse;
 }
 
 // ─── Feature Gating ─────────────────────────────────────────────────────────
