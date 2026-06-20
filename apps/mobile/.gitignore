@@ -24,3 +24,7 @@ node_modules/
 
 # EAS / Store Credentials
 google-play-service-account.json
+
+# Auto-generierte Dokumentationsformate (Quelle: *.md)
+*.docx
+*.pdf
