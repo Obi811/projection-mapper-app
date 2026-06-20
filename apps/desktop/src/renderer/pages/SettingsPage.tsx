@@ -75,11 +75,6 @@ export const SettingsPage: React.FC = () => {
     setActivating(true);
     setMessage(null);
     try {
-      // Debug: Check what's available
-      console.log('[SettingsPage] window.electronAPI:', !!window.electronAPI);
-      console.log('[SettingsPage] window.electronAPI.license:', !!window.electronAPI?.license);
-      console.log('[SettingsPage] window.electronAPI.license.activate:', typeof window.electronAPI?.license?.activate);
-      
       if (window.electronAPI?.license?.activate) {
         const result = await window.electronAPI.license.activate(licenseKey.trim());
         if (result && (result.valid ?? result.success)) {
@@ -96,22 +91,15 @@ export const SettingsPage: React.FC = () => {
           });
         }
       } else {
-        // Better error message
-        const debugInfo = [
-          `electronAPI: ${!!window.electronAPI}`,
-          `license: ${!!window.electronAPI?.license}`,
-          `activate: ${typeof window.electronAPI?.license?.activate}`,
-        ].join(', ');
-        
         setMessage({
           type: 'err',
-          text: `Lizenzaktivierung nicht verfügbar. Debug: ${debugInfo}`,
+          text: 'Lizenzaktivierung ist nur in der Desktop-App verfügbar.',
         });
       }
     } catch (err) {
       setMessage({
         type: 'err',
-        text: `Aktivierung fehlgeschlagen: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`,
+        text: `Aktivierung fehlgeschlagen: ${err instanceof Error ? err.message : 'Prüfe deine Internetverbindung.'}`,
       });
     } finally {
       setActivating(false);

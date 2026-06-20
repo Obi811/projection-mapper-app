@@ -13,7 +13,7 @@
  *   /settings             → Einstellungen (geschützt)
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   HashRouter,
   Routes,
@@ -56,24 +56,6 @@ const LoginRoute: React.FC = () => {
 };
 
 export const App: React.FC = () => {
-  // Debug: Check electronAPI availability on startup
-  useEffect(() => {
-    console.log('[App] Startup Check:');
-    console.log('  window.electronAPI:', !!window.electronAPI);
-    if (window.electronAPI) {
-      console.log('  electronAPI.auth:', !!window.electronAPI.auth);
-      console.log('  electronAPI.license:', !!window.electronAPI.license);
-      console.log('  electronAPI.projector:', !!window.electronAPI.projector);
-      console.log('  electronAPI.app:', !!window.electronAPI.app);
-      
-      // Check specific license methods
-      if (window.electronAPI.license) {
-        console.log('  license.activate:', typeof window.electronAPI.license.activate);
-        console.log('  license.getFeatures:', typeof window.electronAPI.license.getFeatures);
-      }
-    }
-  }, []);
-
   return (
     <AuthProvider>
       <HashRouter>
