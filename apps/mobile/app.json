@@ -2,7 +2,7 @@
   "expo": {
     "name": "Projection Mapper Remote",
     "slug": "projection-mapper-remote",
-    "version": "0.16.0",
+    "version": "0.16.1",
     "orientation": "portrait",
     "scheme": "projmapper",
     "userInterfaceStyle": "dark",
