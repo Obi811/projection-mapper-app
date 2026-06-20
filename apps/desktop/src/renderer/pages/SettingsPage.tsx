@@ -50,19 +50,24 @@ export const SettingsPage: React.FC = () => {
   const [dashboard, setDashboard] = useState<PortalDashboard | null>(null);
   const [loadingPortal, setLoadingPortal] = useState(false);
 
-  // Load portal data
+  // Load portal data (optional - gracefully fails if backend endpoints don't exist)
   useEffect(() => {
     if (window.electronAPI?.portal) {
       setLoadingPortal(true);
       Promise.all([
-        window.electronAPI.portal.getDevices(),
-        window.electronAPI.portal.getDashboard(),
+        window.electronAPI.portal.getDevices().catch(() => []),
+        window.electronAPI.portal.getDashboard().catch(() => null),
       ])
         .then(([devicesData, dashboardData]) => {
-          setDevices(devicesData);
+          setDevices(devicesData || []);
           setDashboard(dashboardData);
         })
-        .catch((err) => console.error('Portal data load error:', err))
+        .catch((err) => {
+          console.warn('Portal data unavailable:', err);
+          // Portal features disabled, but settings page still works
+          setDevices([]);
+          setDashboard(null);
+        })
         .finally(() => setLoadingPortal(false));
     }
   }, []);
@@ -240,7 +245,7 @@ export const SettingsPage: React.FC = () => {
         </section>
 
         {/* Lizenz-Übersicht */}
-        {dashboard && (
+        {dashboard && dashboard.licenses && dashboard.subscriptions && dashboard.stats && (
           <section style={styles.card}>
             <h3 style={styles.cardTitle}>Lizenz-Übersicht</h3>
             <div style={styles.row}>
