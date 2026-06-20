@@ -1,6 +1,6 @@
 {
   "name": "projection-mapper-app",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "Professional projection mapping desktop application for Mac and Windows",
   "main": "dist/main/index.js",
   "author": {
