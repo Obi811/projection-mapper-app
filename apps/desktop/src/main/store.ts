@@ -85,7 +85,16 @@ export function getStore(): Store<StoreSchema> {
 // ─── Convenience accessors ──────────────────────────────────────────────────
 
 export function getDeviceId(): string {
-  return store.get(STORE_KEYS.DEVICE_ID);
+  let deviceId = store.get(STORE_KEYS.DEVICE_ID);
+  
+  // If device_id is missing (e.g. migrated from older version without this field),
+  // generate a new one and persist it immediately.
+  if (!deviceId) {
+    deviceId = uuidv4();
+    store.set(STORE_KEYS.DEVICE_ID, deviceId);
+  }
+  
+  return deviceId;
 }
 
 export function getAccessToken(): string | null {
