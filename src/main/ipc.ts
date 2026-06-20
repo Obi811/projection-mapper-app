@@ -13,6 +13,7 @@ import { IpcChannel } from '../shared/types';
 import type { ProjectorConfig, KeystoneCorners, AddonCategory } from '../shared/types';
 import * as authService from '../services/auth-service';
 import * as licenseService from '../services/license-service';
+import * as portalService from '../services/portal-service';
 import * as outputManager from '../services/output-manager';
 import * as keystoneService from '../services/keystone-service';
 import * as addonService from '../services/addon-service';
@@ -377,5 +378,36 @@ export function registerIpcHandlers(): void {
       version: a.manifest.version,
     }));
     return addonService.checkForUpdates(mapped);
+  });
+
+  // ─── Portal ─────────────────────────────────────────────────────────────
+
+  ipcMain.handle(IpcChannel.PORTAL_GET_PROFILE, async () => {
+    return portalService.getPortalProfile();
+  });
+
+  ipcMain.handle(IpcChannel.PORTAL_GET_DASHBOARD, async () => {
+    return portalService.getPortalDashboard();
+  });
+
+  ipcMain.handle(IpcChannel.PORTAL_GET_DEVICES, async () => {
+    return portalService.getPortalDevices();
+  });
+
+  ipcMain.handle(
+    IpcChannel.PORTAL_UPDATE_PROFILE,
+    async (_event, payload: Record<string, unknown>) => {
+      return portalService.updatePortalProfile(payload);
+    }
+  );
+
+  // ─── App ────────────────────────────────────────────────────────────────
+
+  ipcMain.handle(IpcChannel.APP_GET_VERSION, () => {
+    return app.getVersion();
+  });
+
+  ipcMain.handle(IpcChannel.APP_QUIT, () => {
+    app.quit();
   });
 }

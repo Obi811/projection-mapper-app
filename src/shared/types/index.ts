@@ -7,12 +7,16 @@
 
 // ─── Authentication ──────────────────────────────────────────────────────────
 
+/** User role in the system */
+export type UserRole = 'user' | 'admin' | 'owner';
+
 /** User profile returned by the auth API */
 export interface User {
   id: string;
   email: string;
   name?: string;
   avatarUrl?: string;
+  role: UserRole;
   createdAt: string;
 }
 
@@ -64,6 +68,66 @@ export interface RegisteredPasskey {
   name: string;
   createdAt: string;
   lastUsed?: string;
+}
+
+// ─── Portal / Customer Dashboard ────────────────────────────────────────────
+
+/** User profile from portal API */
+export interface PortalProfile {
+  id: string;
+  email: string;
+  name?: string;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Device registered to user's account */
+export interface RegisteredDevice {
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  platform: string;
+  lastSeen: string;
+  createdAt: string;
+}
+
+/** Subscription information */
+export interface Subscription {
+  id: string;
+  plan: string;
+  status: 'active' | 'canceled' | 'expired';
+  currentPeriodEnd: string;
+  createdAt: string;
+}
+
+/** Payment record */
+export interface Payment {
+  id: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed';
+  description: string;
+  createdAt: string;
+}
+
+/** Portal dashboard data */
+export interface PortalDashboard {
+  licenses: License[];
+  subscriptions: Subscription[];
+  payments: Payment[];
+  stats: {
+    totalDevices: number;
+    activeAddons: number;
+    totalSpent: number;
+  };
+}
+
+/** Profile update payload */
+export interface ProfileUpdatePayload {
+  name?: string;
+  password?: string;
+  currentPassword?: string; // Required if changing password
 }
 
 // ─── Licensing ───────────────────────────────────────────────────────────────
@@ -428,6 +492,12 @@ export enum IpcChannel {
   ADDON_GET_SETTINGS = 'addon:getSettings',
   ADDON_SAVE_SETTINGS = 'addon:saveSettings',
   ADDON_CHECK_UPDATES = 'addon:checkUpdates',
+
+  // Portal
+  PORTAL_GET_PROFILE = 'portal:getProfile',
+  PORTAL_GET_DASHBOARD = 'portal:getDashboard',
+  PORTAL_GET_DEVICES = 'portal:getDevices',
+  PORTAL_UPDATE_PROFILE = 'portal:updateProfile',
 
   // App
   APP_GET_VERSION = 'app:getVersion',

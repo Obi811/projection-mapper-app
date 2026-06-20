@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-06-20
+
+### Added
+
+- **Rollen-System** — Integration des Server-Rollensystems (owner > admin > user)
+  - `User`-Objekt enthält jetzt `role`-Property
+  - Rollen-Badge in Einstellungen mit farblicher Kennzeichnung
+  - Vorbereitung für rollenbasierte Funktionen
+
+- **Portal-Endpoints** — Neue Kundenverwaltungs-Funktionen
+  - `GET /portal/profile` — Profil-Daten abrufen
+  - `GET /portal/dashboard` — Lizenz-Übersicht, Subscriptions, Zahlungen
+  - `GET /portal/devices` — Liste der registrierten Geräte
+  - `PATCH /portal/profile` — Name/Passwort ändern
+  
+- **Erweiterte Einstellungen-Seite**
+  - Aktive Geräte-Liste mit Platform und letzter Aktivität
+  - Lizenz-Übersicht mit Statistiken
+  - Rollen-Anzeige im Profil-Bereich
+
+### Changed
+
+- Portal-Service mit vollständiger API-Integration
+- IPC-Handler für Portal-Kommunikation
+- 6 neue Unit-Tests (gesamt: 132 Tests bestanden)
+
 ## [0.11.0] - 2026-06-20
 
 ### Added

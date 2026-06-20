@@ -2,11 +2,12 @@
  * SettingsPage — Einstellungen, Lizenz, Profil und App-Informationen.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useFeatureGate } from '../hooks/useFeatureGate';
 import { useAppVersion } from '../hooks/useAppVersion';
 import { API_BASE_URL } from '../../shared/constants';
+import type { RegisteredDevice, PortalDashboard } from '../../shared/types';
 
 const FEATURE_LABELS: Record<string, string> = {
   basic_projection: 'Basis-Projektion',
@@ -21,6 +22,18 @@ const FEATURE_LABELS: Record<string, string> = {
   remote_control: 'Fernsteuerung',
 };
 
+const ROLE_LABELS: Record<string, string> = {
+  user: 'Benutzer',
+  admin: 'Administrator',
+  owner: 'Eigentümer',
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  user: '#6b7280',
+  admin: '#3b82f6',
+  owner: '#f59e0b',
+};
+
 export const SettingsPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { features, refresh } = useFeatureGate();
@@ -31,6 +44,28 @@ export const SettingsPage: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(
     null,
   );
+  
+  // Portal data
+  const [devices, setDevices] = useState<RegisteredDevice[]>([]);
+  const [dashboard, setDashboard] = useState<PortalDashboard | null>(null);
+  const [loadingPortal, setLoadingPortal] = useState(false);
+
+  // Load portal data
+  useEffect(() => {
+    if (window.electronAPI?.portal) {
+      setLoadingPortal(true);
+      Promise.all([
+        window.electronAPI.portal.getDevices(),
+        window.electronAPI.portal.getDashboard(),
+      ])
+        .then(([devicesData, dashboardData]) => {
+          setDevices(devicesData);
+          setDashboard(dashboardData);
+        })
+        .catch((err) => console.error('Portal data load error:', err))
+        .finally(() => setLoadingPortal(false));
+    }
+  }, []);
 
   const handleActivate = async () => {
     if (!licenseKey.trim()) {
@@ -88,6 +123,17 @@ export const SettingsPage: React.FC = () => {
           <div style={styles.row}>
             <span style={styles.rowLabel}>E-Mail</span>
             <span style={styles.rowValue}>{user?.email ?? '—'}</span>
+          </div>
+          <div style={styles.row}>
+            <span style={styles.rowLabel}>Rolle</span>
+            <span
+              style={{
+                ...styles.badge,
+                backgroundColor: user?.role ? ROLE_COLORS[user.role] : '#6b7280',
+              }}
+            >
+              {user?.role ? ROLE_LABELS[user.role] : 'Benutzer'}
+            </span>
           </div>
           {user?.createdAt && (
             <div style={styles.row}>
@@ -165,6 +211,53 @@ export const SettingsPage: React.FC = () => {
           )}
         </section>
 
+        {/* Aktive Geräte */}
+        <section style={styles.card}>
+          <h3 style={styles.cardTitle}>Aktive Geräte</h3>
+          {loadingPortal ? (
+            <p style={{ color: '#a1a1aa', margin: 0 }}>Lade Geräte...</p>
+          ) : devices.length === 0 ? (
+            <p style={{ color: '#a1a1aa', margin: 0 }}>
+              Keine Geräte registriert.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {devices.map((device) => (
+                <div key={device.id} style={styles.deviceCard}>
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#e4e4e7' }}>
+                      {device.deviceName}
+                    </div>
+                    <div style={{ fontSize: 13, color: '#a1a1aa', marginTop: 4 }}>
+                      {device.platform} • Zuletzt gesehen:{' '}
+                      {new Date(device.lastSeen).toLocaleDateString('de-DE')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Lizenz-Übersicht */}
+        {dashboard && (
+          <section style={styles.card}>
+            <h3 style={styles.cardTitle}>Lizenz-Übersicht</h3>
+            <div style={styles.row}>
+              <span style={styles.rowLabel}>Aktive Lizenzen</span>
+              <span style={styles.rowValue}>{dashboard.licenses.length}</span>
+            </div>
+            <div style={styles.row}>
+              <span style={styles.rowLabel}>Subscriptions</span>
+              <span style={styles.rowValue}>{dashboard.subscriptions.length}</span>
+            </div>
+            <div style={styles.row}>
+              <span style={styles.rowLabel}>Aktive Addons</span>
+              <span style={styles.rowValue}>{dashboard.stats.activeAddons}</span>
+            </div>
+          </section>
+        )}
+
         {/* Über die App */}
         <section style={styles.card}>
           <h3 style={styles.cardTitle}>Über Projection Mapper</h3>
@@ -234,6 +327,19 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  badge: {
+    padding: '4px 10px',
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#ffffff',
+  },
+  deviceCard: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#27272a',
+    border: '1px solid #3f3f46',
   },
   logoutButton: {
     alignSelf: 'flex-start',

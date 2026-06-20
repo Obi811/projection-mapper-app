@@ -133,6 +133,18 @@ const electronAPI = {
       ipcRenderer.invoke(IpcChannel.ADDON_CHECK_UPDATES),
   },
 
+  // ─── Portal ───────────────────────────────────────────────────────────
+  portal: {
+    getProfile: () =>
+      ipcRenderer.invoke(IpcChannel.PORTAL_GET_PROFILE),
+    getDashboard: () =>
+      ipcRenderer.invoke(IpcChannel.PORTAL_GET_DASHBOARD),
+    getDevices: () =>
+      ipcRenderer.invoke(IpcChannel.PORTAL_GET_DEVICES),
+    updateProfile: (payload: Record<string, unknown>) =>
+      ipcRenderer.invoke(IpcChannel.PORTAL_UPDATE_PROFILE, payload),
+  },
+
   // ─── App ──────────────────────────────────────────────────────────────
   app: {
     getVersion: () => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),
