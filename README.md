@@ -57,6 +57,23 @@ The Expo app (`apps/mobile`) provides:
 See [`apps/mobile/README.md`](apps/mobile/README.md) for setup, running on a device and building
 with EAS for the App Store / TestFlight (requires an Apple Developer account).
 
+### 🎨 App Icons & Branding
+
+Professional icons and splash screens have been created for both desktop and mobile:
+
+**Desktop** (`apps/desktop/build/`):
+- Main icon: `icon.png` (1024×1024) — auto-converted to `.icns` (macOS), `.ico` (Windows)
+- Linux icons: `icons/linux/` (16–512px, pre-generated for better control)
+- See [`apps/desktop/build/ICONS.md`](apps/desktop/build/ICONS.md)
+
+**Mobile** (`apps/mobile/assets/`):
+- App icon: `icon.png` (1024×1024)
+- Android adaptive icon: `adaptive-icon.png` (1024×1024)
+- Splash screen: `splash.png` (1152×2688)
+- See [`apps/mobile/assets/ASSETS.md`](apps/mobile/assets/ASSETS.md)
+
+**Design:** Modern tech aesthetic featuring a stylized projector beam hitting a 3D wireframe mesh, with a dark background (#0b0f19) and cyan/magenta accents matching the UI theme.
+
 ---
 
 ## Features

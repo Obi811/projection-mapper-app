@@ -81,6 +81,7 @@
     "electronVersion": "33.4.11",
     "npmRebuild": false,
     "artifactName": "projection-mapper-${version}-${arch}.${ext}",
+    "icon": "build/icon.png",
     "files": [
       "dist/**/*",
       "public/**/*"
