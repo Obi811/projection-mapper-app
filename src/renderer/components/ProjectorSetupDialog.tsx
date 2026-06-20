@@ -69,7 +69,7 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
         setDisplays([
           {
             id: 1,
-            label: 'Built-in Display',
+            label: 'Integriertes Display',
             bounds: { x: 0, y: 0, width: 1920, height: 1080 },
             workArea: { x: 0, y: 0, width: 1920, height: 1040 },
             scaleFactor: 1,
@@ -77,7 +77,7 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
           },
           {
             id: 2,
-            label: 'External Monitor',
+            label: 'Externer Monitor',
             bounds: { x: 1920, y: 0, width: 1920, height: 1080 },
             workArea: { x: 1920, y: 0, width: 1920, height: 1080 },
             scaleFactor: 1,
@@ -86,7 +86,7 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
         ]);
       }
     } catch (err) {
-      setError('Failed to scan displays. Ensure Electron is running.');
+      setError('Displays konnten nicht gescannt werden. Stellen Sie sicher, dass Electron läuft.');
     } finally {
       setScanning(false);
     }
@@ -101,11 +101,11 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      setError('Please enter a projector name.');
+      setError('Bitte geben Sie einen Projektornamen ein.');
       return;
     }
     if (!selectedDisplayId && displays.length > 0) {
-      setError('Please select a display.');
+      setError('Bitte wählen Sie ein Display aus.');
       return;
     }
 
@@ -135,7 +135,7 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
         <h3 style={styles.title}>
-          {editConfig ? 'Edit Projector' : 'Add Projector'}
+          {editConfig ? 'Projektor bearbeiten' : 'Projektor hinzufügen'}
         </h3>
 
         {error && <div style={styles.error}>{error}</div>}
@@ -148,7 +148,7 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
             value={name}
             onChange={(e) => setName(e.target.value)}
             style={styles.input}
-            placeholder="e.g. Front Wall, Stage Left..."
+            placeholder="z. B. Frontwand, Bühne links ..."
           />
         </label>
 
@@ -161,13 +161,13 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
               disabled={scanning}
               style={styles.scanButton}
             >
-              {scanning ? '⏳ Scanning...' : '🔄 Scan Displays'}
+              {scanning ? '⏳ Wird gescannt ...' : '🔄 Displays scannen'}
             </button>
           </div>
 
           {displays.length === 0 ? (
             <p style={styles.noDisplays}>
-              No displays detected. Click "Scan Displays" to refresh.
+              Keine Displays erkannt. Klicken Sie auf „Displays scannen", um zu aktualisieren.
             </p>
           ) : (
             <div style={styles.displayGrid}>
@@ -212,7 +212,7 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
         {/* Resolution */}
         <div style={styles.row}>
           <label style={{ ...styles.label, flex: 1 }}>
-            Width
+            Breite
             <input
               type="number"
               value={resWidth}
@@ -224,7 +224,7 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
           </label>
           <span style={styles.separator}>×</span>
           <label style={{ ...styles.label, flex: 1 }}>
-            Height
+            Höhe
             <input
               type="number"
               value={resHeight}
@@ -244,16 +244,16 @@ export const ProjectorSetupDialog: React.FC<ProjectorSetupDialogProps> = ({
             onChange={(e) => setFullscreen(e.target.checked)}
             style={styles.checkbox}
           />
-          Fullscreen mode (recommended for projectors)
+          Vollbildmodus (empfohlen für Projektoren)
         </label>
 
         {/* Actions */}
         <div style={styles.actions}>
           <button onClick={onClose} style={styles.cancelButton}>
-            Cancel
+            Abbrechen
           </button>
           <button onClick={handleSave} style={styles.saveButton}>
-            {editConfig ? 'Update' : 'Add Projector'}
+            {editConfig ? 'Aktualisieren' : 'Projektor hinzufügen'}
           </button>
         </div>
       </div>

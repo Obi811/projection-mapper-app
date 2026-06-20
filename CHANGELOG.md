@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-06-20
+
+### Added
+
+- **Komplette Oberfläche nach dem Login** — Die App zeigt nach der Anmeldung jetzt
+  eine vollwertige, durchgängig deutsche Benutzeroberfläche statt Platzhaltern.
+  - **Dashboard/Startseite** mit persönlicher Begrüßung, Lizenz-Badge, Statistik-Karten
+    (konfigurierte Projektoren, aktive Projektoren, freigeschaltete Funktionen),
+    Schnellzugriff-Aktionen, Projektor-Übersicht inkl. Onboarding-/Leerzustand und
+    Funktionsstatus-Übersicht.
+  - **Arbeitsbereich** (`Workspace`) mit Projektions-Canvas, Text-Overlay-Steuerung,
+    Keystone-/Eckenkorrektur und schlanker Werkzeugleiste.
+  - **Projektoren-Seite** für die Verwaltung mehrerer Projektoren (bis zu 16).
+  - **Addons-Seite** für installierte Addons und den Addon-Marktplatz.
+  - **Einstellungen** mit Profil, Lizenzaktivierung, freigeschalteten Funktionen
+    und App-Informationen (Version, API-URL).
+
+- **Navigation & Routing** — Neues Routing auf Basis von React Router (HashRouter).
+  - Geschützte Routen (`ProtectedRoute`): nicht angemeldete Nutzer werden zur
+    Anmeldung umgeleitet, nach erfolgreichem Login geht es direkt zur Startseite.
+  - Linke Navigationsleiste (Dashboard, Arbeitsbereich, Projektoren, Addons,
+    Einstellungen) und Kopfzeile mit Benutzerprofil, Logout und Versionsanzeige.
+
+- **Benutzerprofil & Abmeldung** — Anzeige von Name/E-Mail des angemeldeten Nutzers
+  sowie eine funktionierende Logout-Funktion über das Profilmenü.
+
+- **macOS Code-Signing vorbereitet**
+  - Hardened Runtime, Entitlements (`build/entitlements.mac.plist`) und
+    `afterSign`-Notarisierungs-Hook (`build/notarize.js`, abhängig von
+    `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` / `APPLE_TEAM_ID`).
+  - `extendInfo` (Info.plist) mit Nutzungsbeschreibungen und Mindest-Systemversion.
+  - Neue Dokumentation: [`docs/macos-installation.md`](docs/macos-installation.md)
+    (Workaround „App ist beschädigt" via `xattr -cr`) und
+    [`docs/code-signing.md`](docs/code-signing.md) (Signatur/Notarisierung & GitHub-Actions-Secrets).
+
+### Changed
+
+- **Durchgängige deutsche Lokalisierung** — Alle verbliebenen englischen Texte und
+  Platzhalter wurden übersetzt (Projektor-Setup-Dialog, Addon-Marktplatz,
+  Addon-Details, Keystone-Panel, Projektor-Verwaltung, Fehlermeldungen u. a.).
+- **Aufgeräumte UI-Struktur** — Veralteter Code mit „v0.4.0"-Platzhaltern
+  (`Sidebar`, `Toolbar`, alte `ProjectionPage`) wurde durch das neue Layout
+  (`AppLayout`) und seitenbasierte Komponenten ersetzt.
+
+### Fixed
+
+- **Kritischer Fehler: leere Oberfläche nach Login** — Nach der Anmeldung wurden
+  nur Platzhalter („bitte annoncieren") angezeigt; die eigentliche Projektions-UI
+  ist nun vollständig erreichbar und nutzbar.
+
 ## [0.10.1] - 2026-06-02
 
 ### Fixed

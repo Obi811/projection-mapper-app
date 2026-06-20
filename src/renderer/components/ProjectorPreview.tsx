@@ -84,7 +84,7 @@ export const ProjectorPreview: React.FC<ProjectorPreviewProps> = ({
       ctx.fillStyle = '#71717a';
       ctx.font = '11px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('No surfaces', width / 2, height / 2);
+      ctx.fillText('Keine Flächen', width / 2, height / 2);
     }
 
     // Draw active indicator

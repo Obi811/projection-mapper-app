@@ -116,19 +116,20 @@ export const ProjectorManagerPanel: React.FC<ProjectorManagerPanelProps> = ({
     return (
       <div style={styles.section}>
         <div style={styles.sectionHeader}>
-          <h3 style={styles.sectionTitle}>Projectors</h3>
+          <h3 style={styles.sectionTitle}>Projektoren</h3>
           <span style={styles.premiumBadge}>⭐ Premium</span>
         </div>
         <div style={styles.upgradePrompt}>
           <p style={styles.upgradeText}>
-            Multi-projector support is a premium feature. Upgrade your license
-            to manage up to {MAX_PROJECTORS} simultaneous projector outputs.
+            Multi-Projektor-Unterstützung ist eine Premium-Funktion. Schalte deine
+            Lizenz frei, um bis zu {MAX_PROJECTORS} Projektor-Ausgänge gleichzeitig
+            zu verwalten.
           </p>
           <button
             style={styles.upgradeButton}
             onClick={onUpgradePrompt}
           >
-            Upgrade to Premium
+            Auf Premium upgraden
           </button>
         </div>
       </div>
@@ -140,7 +141,7 @@ export const ProjectorManagerPanel: React.FC<ProjectorManagerPanelProps> = ({
     <div style={styles.section}>
       <div style={styles.sectionHeader}>
         <h3 style={styles.sectionTitle}>
-          Projectors
+          Projektoren
           <span style={styles.count}>
             {configs.length}/{MAX_PROJECTORS}
           </span>
@@ -154,21 +155,21 @@ export const ProjectorManagerPanel: React.FC<ProjectorManagerPanelProps> = ({
           disabled={configs.length >= MAX_PROJECTORS}
           title={
             configs.length >= MAX_PROJECTORS
-              ? 'Maximum projectors reached'
-              : 'Add projector'
+              ? 'Maximale Anzahl an Projektoren erreicht'
+              : 'Projektor hinzufügen'
           }
         >
-          + Add
+          + Hinzufügen
         </button>
       </div>
 
       {loading ? (
-        <p style={styles.placeholder}>Loading projector configurations...</p>
+        <p style={styles.placeholder}>Projektor-Konfigurationen werden geladen…</p>
       ) : configs.length === 0 ? (
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>No projectors configured yet.</p>
+          <p style={styles.emptyText}>Noch keine Projektoren konfiguriert.</p>
           <p style={styles.emptyHint}>
-            Click "Add" to set up your first projector output.
+            Klicke auf „Hinzufügen“, um deinen ersten Projektor-Ausgang einzurichten.
           </p>
         </div>
       ) : (
@@ -208,7 +209,7 @@ export const ProjectorManagerPanel: React.FC<ProjectorManagerPanelProps> = ({
 
                   <span style={styles.projectorMeta}>
                     {config.resolution.width}×{config.resolution.height}
-                    {config.fullscreen ? ' · Fullscreen' : ''}
+                    {config.fullscreen ? ' · Vollbild' : ''}
                   </span>
 
                   {state?.fps !== undefined && isActive && (
@@ -227,7 +228,7 @@ export const ProjectorManagerPanel: React.FC<ProjectorManagerPanelProps> = ({
                       }}
                       onClick={() => handleToggleProjector(config.id)}
                     >
-                      {isActive ? '■ Stop' : '▶ Start'}
+                      {isActive ? '■ Stopp' : '▶ Start'}
                     </button>
 
                     <button
@@ -236,7 +237,7 @@ export const ProjectorManagerPanel: React.FC<ProjectorManagerPanelProps> = ({
                         setEditingConfig(config);
                         setShowSetupDialog(true);
                       }}
-                      title="Edit"
+                      title="Bearbeiten"
                     >
                       ✏️
                     </button>
@@ -244,7 +245,7 @@ export const ProjectorManagerPanel: React.FC<ProjectorManagerPanelProps> = ({
                     <button
                       style={styles.deleteButton}
                       onClick={() => handleDeleteConfig(config.id)}
-                      title="Delete"
+                      title="Löschen"
                       disabled={isActive}
                     >
                       🗑️

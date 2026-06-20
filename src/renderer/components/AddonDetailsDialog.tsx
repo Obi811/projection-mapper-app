@@ -50,6 +50,14 @@ export const AddonDetailsDialog: React.FC<AddonDetailsDialogProps> = ({
 
   const isActive = state === 'enabled' || state === 'loaded';
 
+  const STATE_LABELS: Record<string, string> = {
+    enabled: 'AKTIVIERT',
+    loaded: 'GELADEN',
+    disabled: 'DEAKTIVIERT',
+    error: 'FEHLER',
+    installed: 'INSTALLIERT',
+  };
+
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -68,28 +76,28 @@ export const AddonDetailsDialog: React.FC<AddonDetailsDialogProps> = ({
         <div style={styles.body}>
           {/* Description */}
           <div style={styles.field}>
-            <label style={styles.label}>Description</label>
+            <label style={styles.label}>Beschreibung</label>
             <p style={styles.description}>{manifest.description}</p>
           </div>
 
           {/* Author */}
           <div style={styles.field}>
-            <label style={styles.label}>Author</label>
+            <label style={styles.label}>Autor</label>
             <p style={styles.value}>{manifest.author}</p>
           </div>
 
           {/* Entry point */}
           <div style={styles.field}>
-            <label style={styles.label}>Entry Point</label>
+            <label style={styles.label}>Einstiegspunkt</label>
             <p style={styles.valueMono}>{manifest.entry}</p>
           </div>
 
           {/* Permissions */}
           <div style={styles.field}>
-            <label style={styles.label}>Permissions</label>
+            <label style={styles.label}>Berechtigungen</label>
             <div style={styles.permissionList}>
               {manifest.permissions.length === 0 ? (
-                <span style={styles.value}>None required</span>
+                <span style={styles.value}>Keine erforderlich</span>
               ) : (
                 manifest.permissions.map((perm) => (
                   <span key={perm} style={styles.permissionBadge}>
@@ -102,21 +110,21 @@ export const AddonDetailsDialog: React.FC<AddonDetailsDialogProps> = ({
 
           {/* State */}
           <div style={styles.field}>
-            <label style={styles.label}>State</label>
+            <label style={styles.label}>Status</label>
             <span
               style={{
                 ...styles.stateBadge,
                 backgroundColor: isActive ? '#166534' : state === 'error' ? '#991b1b' : '#3f3f46',
               }}
             >
-              {state.toUpperCase()}
+              {STATE_LABELS[state] ?? state.toUpperCase()}
             </span>
           </div>
 
           {/* Settings */}
           {manifest.settings && Object.keys(manifest.settings).length > 0 && (
             <div style={styles.field}>
-              <label style={styles.label}>Settings</label>
+              <label style={styles.label}>Einstellungen</label>
               {Object.entries(manifest.settings).map(([key, setting]) => (
                 <div key={key} style={styles.settingRow}>
                   <label style={styles.settingLabel}>
@@ -173,7 +181,7 @@ export const AddonDetailsDialog: React.FC<AddonDetailsDialogProps> = ({
                 onClick={handleSaveSettings}
                 disabled={saving}
               >
-                {saving ? 'Saving…' : 'Save Settings'}
+                {saving ? 'Wird gespeichert …' : 'Einstellungen speichern'}
               </button>
             </div>
           )}
@@ -182,18 +190,18 @@ export const AddonDetailsDialog: React.FC<AddonDetailsDialogProps> = ({
         {/* Footer Actions */}
         <div style={styles.footer}>
           <button style={styles.toggleActionButton} onClick={onToggle}>
-            {isActive ? 'Disable' : 'Enable'}
+            {isActive ? 'Deaktivieren' : 'Aktivieren'}
           </button>
           {!confirmUninstall ? (
             <button
               style={styles.uninstallButton}
               onClick={() => setConfirmUninstall(true)}
             >
-              Uninstall
+              Deinstallieren
             </button>
           ) : (
             <button style={styles.confirmUninstallButton} onClick={onUninstall}>
-              Confirm Uninstall
+              Deinstallation bestätigen
             </button>
           )}
         </div>

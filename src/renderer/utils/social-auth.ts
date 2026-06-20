@@ -37,13 +37,13 @@ export async function initiateGoogleSignIn(): Promise<string> {
     );
 
     if (!popup) {
-      reject(new Error('Popup blocked. Please allow popups for this application.'));
+      reject(new Error('Popup blockiert. Bitte erlauben Sie Popups für diese Anwendung.'));
       return;
     }
 
     const timeout = setTimeout(() => {
       cleanup();
-      reject(new Error('Google Sign-In timed out. Please try again.'));
+      reject(new Error('Google-Anmeldung – Zeitüberschreitung. Bitte versuchen Sie es erneut.'));
     }, 120_000);
 
     const handleMessage = (event: MessageEvent) => {
@@ -97,13 +97,13 @@ export async function initiateAppleSignIn(): Promise<string> {
     );
 
     if (!popup) {
-      reject(new Error('Popup blocked. Please allow popups for this application.'));
+      reject(new Error('Popup blockiert. Bitte erlauben Sie Popups für diese Anwendung.'));
       return;
     }
 
     const timeout = setTimeout(() => {
       cleanup();
-      reject(new Error('Apple Sign-In timed out. Please try again.'));
+      reject(new Error('Apple-Anmeldung – Zeitüberschreitung. Bitte versuchen Sie es erneut.'));
     }, 120_000);
 
     const handleMessage = (event: MessageEvent) => {

@@ -89,3 +89,11 @@ button {
   background: none;
   color: inherit;
 }
+
+
+/* Spinner-Animation (Ladezustände) */
+@keyframes pm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
