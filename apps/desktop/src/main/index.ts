@@ -55,8 +55,6 @@ function createWindow(): void {
     // frame: false,
   });
 
-  console.log('[Main] Window created, bounds:', mainWindow.getBounds());
-
   // In development, load from Vite dev server; in production, load built files
   const isDev = !app.isPackaged;
   if (isDev) {
@@ -64,19 +62,8 @@ function createWindow(): void {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     const indexPath = path.join(__dirname, '..', 'renderer', 'index.html');
-    console.log('[Main] Loading index.html from:', indexPath);
-    console.log('[Main] __dirname:', __dirname);
-    console.log('[Main] app.isPackaged:', app.isPackaged);
-    console.log('[Main] app.getAppPath():', app.getAppPath());
-    
     mainWindow.loadFile(indexPath).catch((err) => {
       console.error('[Main] Failed to load index.html:', err);
-      // Fallback: Try loading from app path
-      const fallbackPath = path.join(app.getAppPath(), 'dist', 'renderer', 'index.html');
-      console.log('[Main] Trying fallback path:', fallbackPath);
-      mainWindow?.loadFile(fallbackPath).catch((fallbackErr) => {
-        console.error('[Main] Fallback also failed:', fallbackErr);
-      });
     });
   }
 

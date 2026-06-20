@@ -445,14 +445,4 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannel.REMOTE_IS_RUNNING, () => {
     return remoteControlServer.isRunning();
   });
-
-  // ─── App ────────────────────────────────────────────────────────────────
-
-  ipcMain.handle(IpcChannel.APP_GET_VERSION, () => {
-    return app.getVersion();
-  });
-
-  ipcMain.handle(IpcChannel.APP_QUIT, () => {
-    app.quit();
-  });
 }
