@@ -88,11 +88,26 @@ export async function validateLicense(
   // NOTE: The Obitron API uses snake_case field names.
   // The /licenses/validate endpoint expects ONLY license_key + device_id
   // (it rejects an extra device_name property with HTTP 400).
-  const { data } = await apiClient.post<RawLicenseResponse>(
-    '/licenses/validate',
-    { license_key: licenseKey, device_id: deviceId },
-  );
-  return normalizeLicenseResponse(data) as LicenseValidationResponse;
+  try {
+    const { data } = await apiClient.post<RawLicenseResponse>(
+      '/licenses/validate',
+      { license_key: licenseKey, device_id: deviceId },
+    );
+    return normalizeLicenseResponse(data) as LicenseValidationResponse;
+  } catch (error: unknown) {
+    // Extract the server's error message for better debugging
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: unknown } } };
+      const serverMessage = axiosError.response?.data?.message;
+      if (serverMessage) {
+        const msg = Array.isArray(serverMessage)
+          ? serverMessage.join(', ')
+          : String(serverMessage);
+        throw new Error(`License validation failed: ${msg}`);
+      }
+    }
+    throw error;
+  }
 }
 
 /**
@@ -109,11 +124,26 @@ export async function activateLicense(
 ): Promise<LicenseActivationResponse> {
   // NOTE: The Obitron API uses snake_case field names.
   // The /licenses/activate endpoint REQUIRES license_key + device_id + device_name.
-  const { data } = await apiClient.post<RawLicenseResponse>(
-    '/licenses/activate',
-    { license_key: licenseKey, device_id: deviceId, device_name: deviceName },
-  );
-  return normalizeLicenseResponse(data) as LicenseActivationResponse;
+  try {
+    const { data } = await apiClient.post<RawLicenseResponse>(
+      '/licenses/activate',
+      { license_key: licenseKey, device_id: deviceId, device_name: deviceName },
+    );
+    return normalizeLicenseResponse(data) as LicenseActivationResponse;
+  } catch (error: unknown) {
+    // Extract the server's error message for better debugging
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { message?: unknown } } };
+      const serverMessage = axiosError.response?.data?.message;
+      if (serverMessage) {
+        const msg = Array.isArray(serverMessage)
+          ? serverMessage.join(', ')
+          : String(serverMessage);
+        throw new Error(`License activation failed: ${msg}`);
+      }
+    }
+    throw error;
+  }
 }
 
 // ─── Feature Gating ─────────────────────────────────────────────────────────

@@ -143,18 +143,32 @@ export function registerIpcHandlers(): void {
     async (_event, licenseKey: string) => {
       const deviceId = getDeviceId();
       const deviceName = `${os.hostname()} (${os.platform()})`;
-      const result = await licenseService.activateLicense(
-        licenseKey,
-        deviceId,
-        deviceName,
-      );
+      
+      console.log('[LICENSE_ACTIVATE] Request:', {
+        license_key: licenseKey,
+        device_id: deviceId,
+        device_name: deviceName,
+      });
 
-      if (result.success && result.features) {
-        setLicenseData(licenseKey, result.features);
-        licenseService.setEnabledFeatures(result.features);
+      try {
+        const result = await licenseService.activateLicense(
+          licenseKey,
+          deviceId,
+          deviceName,
+        );
+
+        console.log('[LICENSE_ACTIVATE] Success:', result);
+
+        if (result.success && result.features) {
+          setLicenseData(licenseKey, result.features);
+          licenseService.setEnabledFeatures(result.features);
+        }
+
+        return result;
+      } catch (error) {
+        console.error('[LICENSE_ACTIVATE] Error:', error);
+        throw error;
       }
-
-      return result;
     },
   );
 
