@@ -207,7 +207,9 @@ jobs:
           NEW_VERSION="${{ needs.analyze.outputs.new_version }}"
           # Keep the root and every workspace package in sync.
           npm version "$NEW_VERSION" --no-git-tag-version --workspaces --include-workspace-root
-          git add package.json package-lock.json packages/*/package.json apps/*/package.json
+          # Keep the Expo app.json version in sync (npm version does not touch it).
+          node -e "const fs=require('fs');const p='apps/mobile/app.json';const j=JSON.parse(fs.readFileSync(p));j.expo.version='$NEW_VERSION';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
+          git add package.json package-lock.json packages/*/package.json apps/*/package.json apps/mobile/app.json
           git commit -m "chore(release): v${NEW_VERSION}"
           git tag "v${NEW_VERSION}"
 
