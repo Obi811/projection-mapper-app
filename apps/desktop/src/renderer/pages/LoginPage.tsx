@@ -23,6 +23,7 @@ import {
   initiateGoogleSignIn,
   initiateAppleSignIn,
 } from '../utils/social-auth';
+import { useAuth } from '../context/AuthContext';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -59,6 +60,7 @@ function friendlyError(err: unknown): string {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+  const { setUser } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,20 +86,27 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
+      let response;
       if (window.electronAPI) {
         if (isRegister) {
-          await window.electronAPI.auth.register(email, password, name || undefined);
+          response = await window.electronAPI.auth.register(email, password, name || undefined);
         } else {
-          await window.electronAPI.auth.login(email, password);
+          response = await window.electronAPI.auth.login(email, password);
         }
       } else {
         const { login, register } = await import('@services/auth-service');
         if (isRegister) {
-          await register(email, password, name || undefined);
+          response = await register(email, password, name || undefined);
         } else {
-          await login(email, password);
+          response = await login(email, password);
         }
       }
+      
+      // Set user immediately in context to avoid race condition
+      if (response?.user) {
+        setUser(response.user);
+      }
+      
       setSuccess(isRegister ? 'Konto erstellt!' : 'Erfolgreich angemeldet!');
       setTimeout(onLoginSuccess, 300);
     } catch (err: unknown) {
@@ -123,11 +132,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         idToken = await initiateAppleSignIn();
       }
 
+      let response;
       if (window.electronAPI) {
-        await window.electronAPI.auth.socialAuth(provider, idToken);
+        response = await window.electronAPI.auth.socialAuth(provider, idToken);
       } else {
         const { socialAuth } = await import('@services/auth-service');
-        await socialAuth(provider, idToken);
+        response = await socialAuth(provider, idToken);
+      }
+
+      // Set user immediately in context to avoid race condition
+      if (response?.user) {
+        setUser(response.user);
       }
 
       setSuccess('Erfolgreich angemeldet!');
@@ -167,11 +182,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
       const serialized = serializeLoginCredential(credential as PublicKeyCredential);
 
+      let response;
       if (window.electronAPI) {
-        await window.electronAPI.auth.passkeyLoginFinish(serialized);
+        response = await window.electronAPI.auth.passkeyLoginFinish(serialized);
       } else {
         const { passkeyLoginFinish } = await import('@services/auth-service');
-        await passkeyLoginFinish(serialized);
+        response = await passkeyLoginFinish(serialized);
+      }
+
+      // Set user immediately in context to avoid race condition
+      if (response?.user) {
+        setUser(response.user);
       }
 
       setSuccess('Erfolgreich mit Passkey angemeldet!');

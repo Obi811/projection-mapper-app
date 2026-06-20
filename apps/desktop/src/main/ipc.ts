@@ -53,26 +53,7 @@ export function registerIpcHandlers(): void {
     IpcChannel.AUTH_LOGIN,
     async (_event, email: string, password: string) => {
       const response = await authService.login(email, password);
-      console.log('[IPC] Login response:', JSON.stringify(response, null, 2));
-      
-      // Validate response structure
-      if (!response.access_token || !response.refresh_token) {
-        console.error('[IPC] Missing tokens in login response');
-        throw new Error('Ungültige Server-Antwort: Tokens fehlen');
-      }
-      
-      if (!response.user) {
-        console.error('[IPC] Missing user object in login response');
-        throw new Error('Ungültige Server-Antwort: Benutzerdaten fehlen');
-      }
-      
-      console.log('[IPC] Storing auth data for user:', response.user.email);
       setAuthData(response.access_token, response.refresh_token, response.user);
-      
-      // Verify storage
-      const storedUser = getUser();
-      console.log('[IPC] Stored user:', storedUser ? storedUser.email : 'null');
-      
       return response;
     },
   );
@@ -94,9 +75,7 @@ export function registerIpcHandlers(): void {
   });
 
   ipcMain.handle(IpcChannel.AUTH_GET_USER, async () => {
-    const user = getUser();
-    console.log('[IPC] AUTH_GET_USER called, returning:', user ? `User(${user.email})` : 'null');
-    return user;
+    return getUser();
   });
 
   ipcMain.handle(
