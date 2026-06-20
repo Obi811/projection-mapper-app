@@ -21,3 +21,6 @@ node_modules/
 # Misc
 *.log
 .DS_Store
+
+# EAS / Store Credentials
+google-play-service-account.json

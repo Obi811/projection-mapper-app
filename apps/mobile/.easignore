@@ -1,0 +1,22 @@
+# Node modules sind bereits in .gitignore
+# EAS lädt automatisch nur die relevanten Dateien hoch
+
+# Entwicklungs-Builds
+*.log
+.expo/
+.expo-shared/
+
+# Tests
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# IDE
+.vscode/
+.idea/
+
+# Verschiedenes
+*.local
+.DS_Store
