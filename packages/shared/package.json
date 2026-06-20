@@ -1,6 +1,6 @@
 {
   "name": "@projection-mapper/shared",
-  "version": "0.16.9",
+  "version": "0.16.10",
   "description": "Shared protocol, types and constants for the Projection Mapper desktop and mobile apps",
   "private": true,
   "type": "module",
