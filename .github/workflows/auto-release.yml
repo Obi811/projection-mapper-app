@@ -205,8 +205,9 @@ jobs:
       - name: Bump version
         run: |
           NEW_VERSION="${{ needs.analyze.outputs.new_version }}"
-          npm version "$NEW_VERSION" --no-git-tag-version
-          git add package.json package-lock.json
+          # Keep the root and every workspace package in sync.
+          npm version "$NEW_VERSION" --no-git-tag-version --workspaces --include-workspace-root
+          git add package.json package-lock.json packages/*/package.json apps/*/package.json
           git commit -m "chore(release): v${NEW_VERSION}"
           git tag "v${NEW_VERSION}"
 
@@ -256,6 +257,7 @@ jobs:
 
       - name: Package
         run: npx electron-builder ${{ matrix.platform_flag }} --publish never
+        working-directory: apps/desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -264,10 +266,10 @@ jobs:
         with:
           tag_name: v${{ needs.analyze.outputs.new_version }}
           files: |
-            release/*.dmg
-            release/*.zip
-            release/*.exe
-            release/*.AppImage
-            release/*.deb
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

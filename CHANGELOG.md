@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Monorepo-Migration** 🏗️
+  - Umstellung des Repositories auf eine npm-Workspaces-Monorepo-Struktur
+  - Desktop-App nach `apps/desktop/` verschoben (Git-Historie erhalten via `git mv`)
+  - Neues geteiltes Paket `@projection-mapper/shared` (`packages/shared/`) mit
+    Remote-Protokoll (`remote-protocol.ts`), API-Typen (`api.ts`) und Tests
+  - Root-`package.json` als Workspace-Manager mit delegierenden Scripts
+    (`dev:desktop`, `dev:mobile`, `typecheck`, `lint`, `test`, `build`)
+  - Husky- und commitlint-Konfiguration ins Root verschoben
+  - CI/CD-Workflows (`test`, `build`, `release`, `auto-release`) auf die
+    Monorepo-Struktur angepasst (electron-builder läuft in `apps/desktop`)
+
+- **Mobile Companion-App (Feature 5b)** 📱
+  - Neue React-Native-/Expo-App (`apps/mobile`, Expo SDK 51)
+  - **Remote-Control-Modus**: WebSocket-Verbindung zur Desktop-App über das
+    gemeinsame Protokoll aus `@projection-mapper/shared`, mit Auto-Reconnect
+  - **QR-Code-Pairing** (expo-camera) sowie manuelle Host/Port/Token-Eingabe
+  - **Standalone-Modus**: eigenständiges Offline-Cue-Board ohne Desktop
+  - Login, Rollen-System und Lizenz-Dashboard über den bestehenden Lizenz-Server,
+    inkl. **Gast-Modus**
+  - Token-Persistenz und automatischer Token-Refresh (AsyncStorage)
+  - Vorbereitet für EAS-Builds (App Store / TestFlight / Play Store)
+
 ## [0.13.0] - 2026-06-20
 
 ### Added

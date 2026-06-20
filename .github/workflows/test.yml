@@ -77,9 +77,10 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
+        working-directory: apps/desktop
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: npm run test:e2e -w @projection-mapper/desktop
         env:
           CI: true
 
@@ -89,5 +90,27 @@ jobs:
         with:
           name: e2e-test-results
           path: |
-            test-results/
-            playwright-report/
+            apps/desktop/test-results/
+            apps/desktop/playwright-report/
+
+  mobile:
+    name: Mobile (Type Check & Lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check mobile app
+        run: npm run typecheck -w @projection-mapper/mobile
+
+      - name: Lint mobile app
+        run: npm run lint -w @projection-mapper/mobile

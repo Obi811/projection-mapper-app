@@ -6,7 +6,56 @@
 [![Auto Release](https://github.com/Obi811/projection-mapper-app/actions/workflows/auto-release.yml/badge.svg)](https://github.com/Obi811/projection-mapper-app/actions/workflows/auto-release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Professional projection mapping desktop application for Mac and Windows, built with **Electron**, **React**, **TypeScript**, and **Three.js**.
+Professional projection mapping desktop application for Mac and Windows, built with **Electron**, **React**, **TypeScript**, and **Three.js** — now with a **mobile companion app** (Expo / React Native) in a single **npm-workspaces monorepo**.
+
+---
+
+## 📦 Monorepo Structure
+
+This repository is an **npm-workspaces monorepo**:
+
+```
+projection-mapper-app/
+├── packages/
+│   └── shared/        # @projection-mapper/shared — protocol, API contract & shared types
+├── apps/
+│   ├── desktop/       # @projection-mapper/desktop — Electron desktop app (Mac/Win/Linux)
+│   └── mobile/        # @projection-mapper/mobile — Expo companion & remote-control app
+├── package.json       # workspace root (scripts, husky, commitlint)
+└── .github/workflows/ # CI/CD for all packages
+```
+
+### Why a monorepo?
+The **mobile remote-control app** and the **desktop server** must speak exactly the same
+WebSocket protocol. The `@projection-mapper/shared` package is the **single source of truth**
+for that protocol (`remote-protocol.ts`) and the licensing API contract (`api.ts`), so the wire
+format can never drift between the two apps.
+
+### Common commands (run from the repo root)
+
+| Command | Description |
+| --- | --- |
+| `npm install` | Install all workspaces |
+| `npm run dev:desktop` | Start the Electron app in dev mode |
+| `npm run dev:mobile` | Start the Expo dev server |
+| `npm run build` | Build `shared` + `desktop` |
+| `npm test` | Run `shared` + `desktop` unit tests |
+| `npm run lint` / `npm run typecheck` | Lint / type-check all packages |
+| `npm run package:mac\|win\|linux` | Package the desktop binaries |
+
+You can also target a single workspace, e.g. `npm run test -w @projection-mapper/desktop`.
+
+### 📱 Mobile companion app
+The Expo app (`apps/mobile`) provides:
+- **Remote control** of the desktop over the local network (WebSocket), with QR-code pairing
+  (scan the code from the desktop *Remote* panel) or manual host/port/token entry.
+- **Transport controls** (play/pause/stop/seek), volume, scene navigation and output blackout.
+- **Standalone mode** — an offline cue board that works without a desktop connection.
+- **Account & licensing** — login/registration against `licensing.obitron.de`, role badge
+  (user / admin / owner) and license dashboard.
+
+See [`apps/mobile/README.md`](apps/mobile/README.md) for setup, running on a device and building
+with EAS for the App Store / TestFlight (requires an Apple Developer account).
 
 ---
 

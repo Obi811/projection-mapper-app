@@ -1,118 +1,37 @@
 {
-  "name": "projection-mapper-app",
+  "name": "projection-mapper-monorepo",
   "version": "0.13.0",
-  "description": "Professional projection mapping desktop application for Mac and Windows",
-  "main": "dist/main/index.js",
+  "description": "Monorepo for the Projection Mapper desktop app, mobile companion app and shared packages",
+  "private": true,
   "author": {
     "name": "Obi811",
     "email": "obi811@users.noreply.github.com"
   },
   "license": "MIT",
-  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/desktop",
+    "apps/mobile"
+  ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
-    "dev:main": "tsc -p tsconfig.main.json --watch",
-    "dev:renderer": "vite",
-    "build": "npm run build:main && npm run build:renderer",
-    "build:main": "tsc -p tsconfig.main.json",
-    "build:renderer": "vite build",
-    "start": "electron dist/main/index.js",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit",
-    "package:mac": "electron-builder --mac",
-    "package:win": "electron-builder --win",
-    "package:linux": "electron-builder --linux",
-    "package:all": "electron-builder --mac --win --linux",
-    "changelog": "node scripts/update-changelog.js",
-    "changelog:dry": "node scripts/update-changelog.js --dry-run",
-    "version:patch": "npm version patch --no-git-tag-version",
-    "version:minor": "npm version minor --no-git-tag-version",
-    "version:major": "npm version major --no-git-tag-version",
-    "version:beta": "npm version prerelease --preid=beta --no-git-tag-version",
-    "prepare": "husky"
-  },
-  "dependencies": {
-    "@react-three/drei": "^9.115.0",
-    "@react-three/fiber": "^8.17.0",
-    "@types/qrcode": "^1.5.6",
-    "@types/ws": "^8.18.1",
-    "axios": "^1.7.0",
-    "electron-store": "^8.2.0",
-    "qrcode": "^1.5.4",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "react-router-dom": "^6.26.0",
-    "three": "^0.170.0",
-    "uuid": "^10.0.0",
-    "ws": "^8.21.0",
-    "zustand": "^5.0.0"
+    "build": "npm run build -w @projection-mapper/shared && npm run build -w @projection-mapper/desktop",
+    "build:desktop": "npm run build -w @projection-mapper/desktop",
+    "build:shared": "npm run build -w @projection-mapper/shared",
+    "dev:desktop": "npm run dev -w @projection-mapper/desktop",
+    "dev:mobile": "npm run start -w @projection-mapper/mobile",
+    "test": "npm run test -w @projection-mapper/shared && npm run test -w @projection-mapper/desktop",
+    "lint": "npm run lint -w @projection-mapper/desktop && npm run lint -w @projection-mapper/mobile",
+    "lint:desktop": "npm run lint -w @projection-mapper/desktop",
+    "typecheck": "npm run build -w @projection-mapper/shared && npm run typecheck -w @projection-mapper/desktop && npm run typecheck -w @projection-mapper/mobile",
+    "typecheck:desktop": "npm run typecheck -w @projection-mapper/desktop",
+    "package:mac": "npm run package:mac -w @projection-mapper/desktop",
+    "package:win": "npm run package:win -w @projection-mapper/desktop",
+    "package:linux": "npm run package:linux -w @projection-mapper/desktop",
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
-    "@electron/notarize": "^2.5.0",
-    "@playwright/test": "^1.48.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "@types/three": "^0.170.0",
-    "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "@vitejs/plugin-react": "^4.3.0",
-    "concurrently": "^9.0.0",
-    "electron": "^33.0.0",
-    "electron-builder": "^25.0.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react": "^7.37.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "husky": "^9.1.7",
-    "jsdom": "^29.1.1",
-    "typescript": "^5.6.0",
-    "vite": "^5.4.0",
-    "vitest": "^2.1.0"
-  },
-  "build": {
-    "appId": "com.obi811.projection-mapper",
-    "productName": "Projection Mapper",
-    "files": [
-      "dist/**/*",
-      "public/**/*"
-    ],
-    "directories": {
-      "output": "release"
-    },
-    "mac": {
-      "category": "public.app-category.graphics-design",
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "extendInfo": {
-        "NSCameraUsageDescription": "Projection Mapper benötigt keinen Kamerazugriff.",
-        "NSMicrophoneUsageDescription": "Projection Mapper kann Audio für die Audio-Synchronisierung verwenden.",
-        "LSMinimumSystemVersion": "10.15.0"
-      }
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ]
-    },
-    "afterSign": "build/notarize.js"
+    "husky": "^9.1.7"
   }
 }
