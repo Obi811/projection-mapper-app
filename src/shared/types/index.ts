@@ -433,6 +433,55 @@ export type TransformMatrix4 = [
   number, number, number, number,
 ];
 
+// ─── Audio Synchronization ──────────────────────────────────────────────────
+
+/** Audio track metadata */
+export interface AudioTrack {
+  id: string;
+  name: string;
+  url: string;
+  duration: number;
+  bpm?: number;
+}
+
+/** Current audio playback state */
+export interface AudioState {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  track: AudioTrack | null;
+}
+
+/** Beat marker for timeline sync */
+export interface BeatMarker {
+  time: number;
+  strength: number; // 0-1
+}
+
+// ─── Remote Control ─────────────────────────────────────────────────────────
+
+/** Remote control command */
+export interface RemoteCommand {
+  type: string;
+  payload?: unknown;
+}
+
+/** Connected remote client info */
+export interface RemoteClientInfo {
+  id: string;
+  name: string;
+  authenticated: boolean;
+  connectedAt: number;
+}
+
+/** Remote control server configuration */
+export interface RemoteServerConfig {
+  port: number;
+  token: string;
+  url: string;
+}
+
 // ─── IPC (Main ↔ Renderer) ──────────────────────────────────────────────────
 
 /** Channel names for Electron IPC communication */
@@ -498,6 +547,16 @@ export enum IpcChannel {
   PORTAL_GET_DASHBOARD = 'portal:getDashboard',
   PORTAL_GET_DEVICES = 'portal:getDevices',
   PORTAL_UPDATE_PROFILE = 'portal:updateProfile',
+
+  // Audio
+  AUDIO_OPEN_FILE = 'audio:openFile',
+
+  // Remote Control
+  REMOTE_START_SERVER = 'remote:startServer',
+  REMOTE_STOP_SERVER = 'remote:stopServer',
+  REMOTE_GET_INFO = 'remote:getInfo',
+  REMOTE_GET_CLIENTS = 'remote:getClients',
+  REMOTE_IS_RUNNING = 'remote:isRunning',
 
   // App
   APP_GET_VERSION = 'app:getVersion',

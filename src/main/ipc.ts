@@ -8,7 +8,7 @@
  * the electron-store as needed, and returns typed results.
  */
 
-import { ipcMain, app } from 'electron';
+import { ipcMain, app, dialog } from 'electron';
 import { IpcChannel } from '../shared/types';
 import type { ProjectorConfig, KeystoneCorners, AddonCategory } from '../shared/types';
 import * as authService from '../services/auth-service';
@@ -18,6 +18,7 @@ import * as outputManager from '../services/output-manager';
 import * as keystoneService from '../services/keystone-service';
 import * as addonService from '../services/addon-service';
 import * as pluginLoader from '../services/plugin-loader';
+import { remoteControlServer } from '../services/remote-control-server';
 import {
   createProjectorWindow,
   closeProjectorWindow,
@@ -400,6 +401,50 @@ export function registerIpcHandlers(): void {
       return portalService.updatePortalProfile(payload);
     }
   );
+
+  // ─── Audio ──────────────────────────────────────────────────────────────
+
+  ipcMain.handle(IpcChannel.AUDIO_OPEN_FILE, async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'm4a', 'flac'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    return result.filePaths[0];
+  });
+
+  // ─── Remote Control ─────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    IpcChannel.REMOTE_START_SERVER,
+    async (_event, port: number = 8765) => {
+      await remoteControlServer.start({ port });
+      return remoteControlServer.getConnectionInfo();
+    }
+  );
+
+  ipcMain.handle(IpcChannel.REMOTE_STOP_SERVER, async () => {
+    await remoteControlServer.stop();
+  });
+
+  ipcMain.handle(IpcChannel.REMOTE_GET_INFO, () => {
+    return remoteControlServer.getConnectionInfo();
+  });
+
+  ipcMain.handle(IpcChannel.REMOTE_GET_CLIENTS, () => {
+    return remoteControlServer.getClients();
+  });
+
+  ipcMain.handle(IpcChannel.REMOTE_IS_RUNNING, () => {
+    return remoteControlServer.isRunning();
+  });
 
   // ─── App ────────────────────────────────────────────────────────────────
 

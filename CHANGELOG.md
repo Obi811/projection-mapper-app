@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-06-20
+
+### Added
+
+- **Audio-Synchronisation (Feature 3)** 🎵
+  - Audio-Service mit Web Audio API (Playback, Pause, Stop, Seek)
+  - Echtzeit-Waveform-Visualisierung auf Canvas
+  - Frequency- und Waveform-Daten für visuelle Effekte
+  - Lautstärkeregelung und Timeline-Steuerung
+  - Audio-Datei-Import (MP3, WAV, OGG, M4A, FLAC)
+  - AudioPlayer-Komponente mit vollständiger Steuerung
+  - Neue Audio-Seite in Navigation integriert
+
+- **Remote-Control Server (Feature 5)** 📱
+  - WebSocket-Server für mobile App-Steuerung
+  - Token-basierte Authentifizierung
+  - QR-Code-Pairing für einfache Verbindung
+  - Echtzeit-Verbindungsüberwachung
+  - Command-Handler-System für remote Befehle
+  - RemoteControlPanel-Komponente mit Server-Management
+  - Client-Liste mit Authentifizierungsstatus
+  - Neue Remote-Seite in Navigation integriert
+
+### Changed
+
+- Navigation um "Audio" und "Remote" erweitert
+- IPC-Handler für Audio- und Remote-Funktionen
+- Preload-API um audio und remote APIs erweitert
+- 11 neue Unit-Tests (gesamt: 143 Tests bestanden)
+
+### Dependencies
+
+- `ws` - WebSocket-Server
+- `@types/ws` - TypeScript-Definitionen
+- `qrcode` - QR-Code-Generierung
+- `@types/qrcode` - TypeScript-Definitionen
+
 ## [0.12.0] - 2026-06-20
 
 ### Added

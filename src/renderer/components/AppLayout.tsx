@@ -25,6 +25,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/workspace', label: 'Arbeitsbereich', icon: '🎯' },
   { to: '/projectors', label: 'Projektoren', icon: '📽️' },
   { to: '/addons', label: 'Addons', icon: '🧩' },
+  { to: '/audio', label: 'Audio', icon: '🎵' },
+  { to: '/remote', label: 'Remote', icon: '📱' },
   { to: '/settings', label: 'Einstellungen', icon: '⚙️' },
 ];
 
@@ -33,6 +35,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/workspace': 'Arbeitsbereich',
   '/projectors': 'Projektoren',
   '/addons': 'Addons',
+  '/audio': 'Audio-Synchronisation',
+  '/remote': 'Remote-Steuerung',
   '/settings': 'Einstellungen',
 };
 

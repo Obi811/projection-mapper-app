@@ -29,6 +29,8 @@ import { DashboardPage } from './pages/DashboardPage';
 import { WorkspacePage } from './pages/WorkspacePage';
 import { ProjectorsPage } from './pages/ProjectorsPage';
 import { AddonsPage } from './pages/AddonsPage';
+import { AudioPage } from './pages/AudioPage';
+import { RemotePage } from './pages/RemotePage';
 import { SettingsPage } from './pages/SettingsPage';
 
 /**
@@ -68,6 +70,8 @@ export const App: React.FC = () => {
               <Route path="/workspace" element={<WorkspacePage />} />
               <Route path="/projectors" element={<ProjectorsPage />} />
               <Route path="/addons" element={<AddonsPage />} />
+              <Route path="/audio" element={<AudioPage />} />
+              <Route path="/remote" element={<RemotePage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

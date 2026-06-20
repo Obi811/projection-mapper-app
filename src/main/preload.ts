@@ -145,6 +145,26 @@ const electronAPI = {
       ipcRenderer.invoke(IpcChannel.PORTAL_UPDATE_PROFILE, payload),
   },
 
+  // ─── Audio ────────────────────────────────────────────────────────────
+  audio: {
+    openFile: () =>
+      ipcRenderer.invoke(IpcChannel.AUDIO_OPEN_FILE),
+  },
+
+  // ─── Remote Control ───────────────────────────────────────────────────
+  remote: {
+    startServer: (port?: number) =>
+      ipcRenderer.invoke(IpcChannel.REMOTE_START_SERVER, port),
+    stopServer: () =>
+      ipcRenderer.invoke(IpcChannel.REMOTE_STOP_SERVER),
+    getInfo: () =>
+      ipcRenderer.invoke(IpcChannel.REMOTE_GET_INFO),
+    getClients: () =>
+      ipcRenderer.invoke(IpcChannel.REMOTE_GET_CLIENTS),
+    isRunning: () =>
+      ipcRenderer.invoke(IpcChannel.REMOTE_IS_RUNNING),
+  },
+
   // ─── App ──────────────────────────────────────────────────────────────
   app: {
     getVersion: () => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),
