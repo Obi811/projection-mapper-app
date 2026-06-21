@@ -48,21 +48,63 @@ export function generateDeviceId(): string {
 interface RawLicenseResponse {
   valid?: boolean;
   success?: boolean;
+  status?: string;
+  activated?: boolean;
   license?: unknown;
   features?: FeatureFlag[] | null;
   [key: string]: unknown;
 }
 
 /**
+ * Extract a feature-flag array from a raw response, checking both the
+ * top-level `features` field and a nested `license.features` field.
+ */
+function extractFeatures(raw: RawLicenseResponse): FeatureFlag[] {
+  if (Array.isArray(raw.features)) return raw.features as FeatureFlag[];
+
+  const license = raw.license as Record<string, unknown> | null | undefined;
+  if (license && Array.isArray(license.features)) {
+    return license.features as FeatureFlag[];
+  }
+  return [];
+}
+
+/**
  * Normalize a raw license API response into the app's camelCase shape.
- * Ensures `valid`, `success` and `features` are always well-defined so the
- * downstream UI / IPC logic never crashes on missing fields.
+ *
+ * The Obitron backend returns DIFFERENT shapes per endpoint:
+ *   - /licenses/validate may return { valid: true, features: [...] }
+ *   - /licenses/activate may return the license object directly, e.g.
+ *     { id, key, status: 'active', features: [...] } WITHOUT a valid/success flag.
+ *
+ * We therefore treat the response as successful if ANY of these hold:
+ *   - valid === true
+ *   - success === true
+ *   - activated === true
+ *   - status === 'active'
+ *   - a license object is present (activate echoes the activated license)
+ *   - a non-empty features array is present
+ *
+ * This guarantees the downstream UI / IPC logic never crashes on missing
+ * fields and that a genuine activation isn't mis-reported as "invalid".
  */
 function normalizeLicenseResponse(
   raw: RawLicenseResponse,
 ): LicenseValidationResponse & LicenseActivationResponse {
-  const ok = raw.valid ?? raw.success ?? false;
-  const features = Array.isArray(raw.features) ? raw.features : [];
+  const features = extractFeatures(raw);
+
+  const license = raw.license as Record<string, unknown> | null | undefined;
+  const licenseStatus =
+    raw.status ?? (license?.status as string | undefined);
+
+  const ok =
+    raw.valid === true ||
+    raw.success === true ||
+    raw.activated === true ||
+    licenseStatus === 'active' ||
+    license != null ||
+    features.length > 0;
+
   return {
     valid: ok,
     success: ok,
@@ -129,6 +171,7 @@ export async function activateLicense(
       '/licenses/activate',
       { license_key: licenseKey, device_id: deviceId, device_name: deviceName },
     );
+    console.log('[activateLicense] Raw server response:', JSON.stringify(data));
     return normalizeLicenseResponse(data) as LicenseActivationResponse;
   } catch (error: unknown) {
     // Extract the server's error message for better debugging

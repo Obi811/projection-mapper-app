@@ -167,5 +167,41 @@ describe('License Service', () => {
       expect(result.valid).toBe(true);
       expect(result.features).toEqual([]);
     });
+
+    it('treats an activate response with status "active" as success', async () => {
+      // Activate endpoint may echo the license object directly (no valid/success flag).
+      postMock.mockResolvedValue({
+        data: {
+          id: 'lic-1',
+          key: 'PM-XXXX',
+          status: 'active',
+          features: ['basic_projection', 'keystone_correction'],
+        },
+      });
+
+      const result = await activateLicense('PM-XXXX', 'dev-1', 'Box');
+      expect(result.success).toBe(true);
+      expect(result.valid).toBe(true);
+      expect(result.features).toEqual(['basic_projection', 'keystone_correction']);
+    });
+
+    it('treats a nested license object as success and extracts its features', async () => {
+      postMock.mockResolvedValue({
+        data: {
+          license: { id: 'lic-1', status: 'active', features: ['multi_surface'] },
+        },
+      });
+
+      const result = await activateLicense('PM-XXXX', 'dev-1', 'Box');
+      expect(result.success).toBe(true);
+      expect(result.features).toEqual(['multi_surface']);
+    });
+
+    it('treats activated:true as success even without features', async () => {
+      postMock.mockResolvedValue({ data: { activated: true } });
+
+      const result = await activateLicense('PM-XXXX', 'dev-1', 'Box');
+      expect(result.success).toBe(true);
+    });
   });
 });
