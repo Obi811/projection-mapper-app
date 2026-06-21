@@ -172,6 +172,28 @@ export async function activateLicense(
       { license_key: licenseKey, device_id: deviceId, device_name: deviceName },
     );
     console.log('[activateLicense] Raw server response:', JSON.stringify(data));
+
+    // Special case: "Device already activated" — the server returns HTTP 200
+    // with { message: "Device already activated", license_key, device_id } but
+    // NO features array. We treat this as success but need to fetch the features
+    // separately via /licenses/validate.
+    const message = (data as { message?: string }).message;
+    if (
+      message &&
+      typeof message === 'string' &&
+      message.toLowerCase().includes('already activated')
+    ) {
+      console.log(
+        '[activateLicense] Device already activated — fetching features via validate',
+      );
+      const validation = await validateLicense(licenseKey, deviceId);
+      return {
+        success: true,
+        license: validation.license,
+        features: validation.features,
+      };
+    }
+
     return normalizeLicenseResponse(data) as LicenseActivationResponse;
   } catch (error: unknown) {
     // Extract the server's error message for better debugging

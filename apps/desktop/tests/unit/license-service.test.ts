@@ -203,5 +203,30 @@ describe('License Service', () => {
       const result = await activateLicense('PM-XXXX', 'dev-1', 'Box');
       expect(result.success).toBe(true);
     });
+
+    it('handles "Device already activated" by fetching features via validate', async () => {
+      // Activate returns "already activated" without features
+      postMock
+        .mockResolvedValueOnce({
+          data: {
+            message: 'Device already activated',
+            license_key: 'PM-XXXX',
+            device_id: 'dev-1',
+          },
+        })
+        // Validate is called to fetch features
+        .mockResolvedValueOnce({
+          data: {
+            valid: true,
+            features: ['multi_surface', 'keystone_correction'],
+          },
+        });
+
+      const result = await activateLicense('PM-XXXX', 'dev-1', 'Box');
+
+      expect(result.success).toBe(true);
+      expect(result.features).toEqual(['multi_surface', 'keystone_correction']);
+      expect(postMock).toHaveBeenCalledTimes(2); // activate + validate
+    });
   });
 });

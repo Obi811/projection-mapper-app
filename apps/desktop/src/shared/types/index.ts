@@ -172,7 +172,7 @@ export interface LicenseValidationResponse {
 /** Response from POST /licenses/activate */
 export interface LicenseActivationResponse {
   success: boolean;
-  license: License;
+  license: License | null;
   features: FeatureFlag[];
 }
 
