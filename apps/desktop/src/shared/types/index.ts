@@ -504,6 +504,9 @@ export enum IpcChannel {
   LICENSE_GET_FEATURES = 'license:getFeatures',
   LICENSE_GET_KEY = 'license:getKey',
   LICENSE_REMOVE = 'license:remove',
+  // Main → renderer event: fired when license/features change (e.g. a
+  // server-side revocation detected during startup re-validation).
+  LICENSE_CHANGED = 'license:changed',
 
   // Device
   DEVICE_GET_ID = 'device:getId',

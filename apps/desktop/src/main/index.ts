@@ -16,12 +16,28 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { registerIpcHandlers } from './ipc';
-import { initStore, getProjectorConfigs, getKeystoneConfigs, getKeystonePresets, getInstalledAddons, setInstalledAddons, getAddonSettings, setAddonSettings } from './store';
+import {
+  initStore,
+  getProjectorConfigs,
+  getKeystoneConfigs,
+  getKeystonePresets,
+  getInstalledAddons,
+  setInstalledAddons,
+  getAddonSettings,
+  setAddonSettings,
+  getDeviceId,
+  getLicenseKey,
+  getFeatures,
+  setLicenseData,
+  clearLicenseData,
+} from './store';
 import { loadConfigs } from '../services/output-manager';
 import { loadConfigs as loadKeystoneConfigs, loadPresets as loadKeystonePresets } from '../services/keystone-service';
 import { configurePluginLoader, initializeRegistry, shutdownAll } from '../services/plugin-loader';
+import * as licenseService from '../services/license-service';
 import { closeAllProjectorWindows } from './projector-window';
-import { ADDON_DIR_NAME } from '../shared/constants';
+import { ADDON_DIR_NAME, LICENSE_REVALIDATION_INTERVAL_MS } from '../shared/constants';
+import { IpcChannel } from '../shared/types';
 import {
   DEFAULT_WINDOW_WIDTH,
   DEFAULT_WINDOW_HEIGHT,
@@ -72,6 +88,51 @@ function createWindow(): void {
   });
 }
 
+// ─── License Enforcement ─────────────────────────────────────────────────────
+
+let licenseRevalidationTimer: NodeJS.Timeout | null = null;
+
+/**
+ * Re-validate the stored license against the licensing server and enforce the
+ * server-side state locally.
+ *
+ *  - If the server explicitly rejects the license (paused / revoked / deleted /
+ *    expired), the local license + features are cleared and the renderer is
+ *    notified so premium features are disabled immediately — no restart needed.
+ *  - If the server confirms it, the local feature set is refreshed (the
+ *    entitlement set may have changed server-side).
+ *  - On network errors / unreachable server, the current local state is kept
+ *    so legitimate offline usage continues uninterrupted.
+ */
+async function revalidateStoredLicense(): Promise<void> {
+  const licenseKey = getLicenseKey();
+  if (!licenseKey) {
+    return; // No license stored — nothing to enforce.
+  }
+
+  const deviceId = getDeviceId();
+  const verdict = await licenseService.revalidateLicense(licenseKey, deviceId);
+
+  if (verdict.status === 'invalid') {
+    console.warn(
+      `[license] Stored license is no longer valid (${verdict.reason}) — revoking local entitlements.`,
+    );
+    clearLicenseData();
+    licenseService.setEnabledFeatures([]);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IpcChannel.LICENSE_CHANGED, []);
+    }
+  } else if (verdict.status === 'valid') {
+    // Refresh the feature set in case it changed server-side.
+    setLicenseData(licenseKey, verdict.features);
+    licenseService.setEnabledFeatures(verdict.features);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IpcChannel.LICENSE_CHANGED, verdict.features);
+    }
+  }
+  // 'unknown' → keep current state (offline grace).
+}
+
 // ─── App Lifecycle ──────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
@@ -115,8 +176,24 @@ app.whenReady().then(() => {
     console.error('[addon] Failed to initialise addon registry:', err),
   );
 
+  // Load persisted license features into the in-memory service so feature
+  // gates are consistent before any server round-trip completes.
+  licenseService.setEnabledFeatures(getFeatures());
+
   registerIpcHandlers();
   createWindow();
+
+  // Enforce server-side license state: re-validate the stored license once at
+  // startup, then periodically while the app runs. A license paused or deleted
+  // on the licensing server will disable premium features without a restart.
+  revalidateStoredLicense().catch((err) =>
+    console.error('[license] Startup re-validation failed:', err),
+  );
+  licenseRevalidationTimer = setInterval(() => {
+    revalidateStoredLicense().catch((err) =>
+      console.error('[license] Periodic re-validation failed:', err),
+    );
+  }, LICENSE_REVALIDATION_INTERVAL_MS);
 
   // macOS: re-create window when dock icon is clicked
   app.on('activate', () => {
@@ -128,6 +205,10 @@ app.whenReady().then(() => {
 
 // Close all projector windows and shutdown addons before quitting
 app.on('before-quit', () => {
+  if (licenseRevalidationTimer) {
+    clearInterval(licenseRevalidationTimer);
+    licenseRevalidationTimer = null;
+  }
   shutdownAll();
   closeAllProjectorWindows();
 });

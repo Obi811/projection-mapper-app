@@ -61,6 +61,14 @@ export const MAX_ADDONS = 50;
 export const ADDON_DIR_NAME = 'addons';
 export const ADDON_MANIFEST_FILENAME = 'addon.json';
 
+/**
+ * How often the app re-validates a stored license against the licensing
+ * server while running (in addition to a check at startup). This ensures a
+ * license paused or revoked server-side disables premium features without
+ * requiring a manual restart. Default: 60 minutes.
+ */
+export const LICENSE_REVALIDATION_INTERVAL_MS = 60 * 60 * 1000;
+
 /** Valid addon permissions */
 export const VALID_ADDON_PERMISSIONS = [
   'projection:read',

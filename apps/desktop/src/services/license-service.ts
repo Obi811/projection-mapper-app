@@ -153,6 +153,94 @@ export async function validateLicense(
 }
 
 /**
+ * Verdict from a strict re-validation of a stored license against the server.
+ *
+ *  - 'valid'   → server explicitly confirms the license is active; `features`
+ *                holds the (possibly updated) entitlement set.
+ *  - 'invalid' → server explicitly rejects the license (paused, revoked,
+ *                deleted, expired, or not found). Local entitlements MUST be
+ *                cleared.
+ *  - 'unknown' → could not determine (network error / server unreachable /
+ *                5xx / ambiguous response). Keep the current local state so
+ *                that legitimate offline usage is not interrupted.
+ */
+export type LicenseVerdict =
+  | { status: 'valid'; features: FeatureFlag[] }
+  | { status: 'invalid'; reason: string }
+  | { status: 'unknown'; reason: string };
+
+/**
+ * Strictly re-validate a stored license against the server.
+ *
+ * Unlike `validateLicense` (which is lenient to support various activate /
+ * validate response shapes), this is used at startup and periodically to
+ * ENFORCE server-side license state. A license that was paused or deleted on
+ * the licensing server must disable premium features locally.
+ *
+ * Decision rules:
+ *  - Explicitly active  (valid===true | success===true | status==='active')
+ *      → 'valid' with the server's current feature set.
+ *  - Explicitly invalid (valid===false, or a status other than 'active',
+ *      or a 4xx response such as 403/404/410)
+ *      → 'invalid' (revoke locally).
+ *  - Anything else (network failure, 5xx, ambiguous)
+ *      → 'unknown' (keep current local state — offline grace).
+ */
+export async function revalidateLicense(
+  licenseKey: string,
+  deviceId: string,
+): Promise<LicenseVerdict> {
+  try {
+    const { data } = await apiClient.post<RawLicenseResponse>(
+      '/licenses/validate',
+      { license_key: licenseKey, device_id: deviceId },
+    );
+
+    const license = data.license as Record<string, unknown> | null | undefined;
+    const licenseStatus =
+      (data.status as string | undefined) ??
+      (license?.status as string | undefined);
+
+    const explicitlyValid =
+      data.valid === true ||
+      data.success === true ||
+      licenseStatus === 'active';
+
+    const explicitlyInvalid =
+      data.valid === false ||
+      (typeof licenseStatus === 'string' && licenseStatus !== 'active');
+
+    if (explicitlyInvalid && !explicitlyValid) {
+      return {
+        status: 'invalid',
+        reason: `Server reports license status: ${licenseStatus ?? 'invalid'}`,
+      };
+    }
+
+    if (explicitlyValid) {
+      return { status: 'valid', features: extractFeatures(data) };
+    }
+
+    // Ambiguous 200 response — don't revoke on uncertainty.
+    return { status: 'unknown', reason: 'Ambiguous server response' };
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { status?: number } };
+      const httpStatus = axiosError.response?.status;
+      // 4xx → the server has an opinion: the license is gone / forbidden.
+      if (httpStatus && httpStatus >= 400 && httpStatus < 500) {
+        return { status: 'invalid', reason: `HTTP ${httpStatus}` };
+      }
+    }
+    // No response, timeout, or 5xx → can't reach the authority. Keep state.
+    return {
+      status: 'unknown',
+      reason: error instanceof Error ? error.message : 'Network error',
+    };
+  }
+}
+
+/**
  * Activate a license key on this device.
  *
  * @param licenseKey - The user's license key string

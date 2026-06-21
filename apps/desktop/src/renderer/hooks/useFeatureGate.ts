@@ -47,6 +47,23 @@ export function useFeatureGate(): FeatureGateState {
     fetchFeatures();
   }, [fetchFeatures]);
 
+  // Live updates: when the main process revalidates the license against the
+  // server (e.g. it was paused/revoked), it emits a license:changed event with
+  // the new feature set. Apply it immediately so premium UI is gated without a
+  // restart.
+  useEffect(() => {
+    if (!window.electronAPI?.license?.onChanged) {
+      return;
+    }
+    const unsubscribe = window.electronAPI.license.onChanged((next) => {
+      setFeatures((next ?? []) as FeatureFlag[]);
+      setLoading(false);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const hasFeature = useCallback(
     (flag: FeatureFlag): boolean => features.includes(flag),
     [features],

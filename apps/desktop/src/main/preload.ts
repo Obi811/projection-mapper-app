@@ -56,6 +56,18 @@ const electronAPI = {
     getKey: () => ipcRenderer.invoke(IpcChannel.LICENSE_GET_KEY),
     
     remove: () => ipcRenderer.invoke(IpcChannel.LICENSE_REMOVE),
+
+    /**
+     * Subscribe to license-change events from the main process (e.g. a
+     * server-side revocation detected during startup re-validation).
+     * Returns an unsubscribe function.
+     */
+    onChanged: (callback: (features: string[]) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, features: string[]) =>
+        callback(features);
+      ipcRenderer.on(IpcChannel.LICENSE_CHANGED, handler);
+      return () => ipcRenderer.removeListener(IpcChannel.LICENSE_CHANGED, handler);
+    },
   },
 
   // ─── Device ───────────────────────────────────────────────────────────

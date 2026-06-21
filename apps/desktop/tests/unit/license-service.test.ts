@@ -20,6 +20,7 @@ import {
   generateDeviceId,
   validateLicense,
   activateLicense,
+  revalidateLicense,
 } from '@services/license-service';
 import type { FeatureFlag } from '@shared/types';
 
@@ -227,6 +228,108 @@ describe('License Service', () => {
       expect(result.success).toBe(true);
       expect(result.features).toEqual(['multi_surface', 'keystone_correction']);
       expect(postMock).toHaveBeenCalledTimes(2); // activate + validate
+    });
+  });
+
+  describe('revalidateLicense (server-side enforcement)', () => {
+    beforeEach(() => {
+      postMock.mockReset();
+    });
+
+    it('returns "valid" with features when the server confirms active', async () => {
+      postMock.mockResolvedValue({
+        data: { valid: true, status: 'active', features: ['multi_surface'] },
+      });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('valid');
+      if (verdict.status === 'valid') {
+        expect(verdict.features).toEqual(['multi_surface']);
+      }
+      expect(postMock).toHaveBeenCalledWith('/licenses/validate', {
+        license_key: 'PM-XXXX',
+        device_id: 'dev-1',
+      });
+    });
+
+    it('returns "valid" using nested license.features', async () => {
+      postMock.mockResolvedValue({
+        data: { status: 'active', license: { features: ['dmx_support'] } },
+      });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('valid');
+      if (verdict.status === 'valid') {
+        expect(verdict.features).toEqual(['dmx_support']);
+      }
+    });
+
+    it('returns "invalid" when the server reports valid:false', async () => {
+      postMock.mockResolvedValue({ data: { valid: false } });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('invalid');
+    });
+
+    it('returns "invalid" when the license is paused', async () => {
+      postMock.mockResolvedValue({ data: { status: 'paused' } });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('invalid');
+    });
+
+    it('returns "invalid" when the license status is revoked', async () => {
+      postMock.mockResolvedValue({
+        data: { license: { status: 'revoked' } },
+      });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('invalid');
+    });
+
+    it('returns "invalid" on a 404 (license deleted)', async () => {
+      postMock.mockRejectedValue({ response: { status: 404 } });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('invalid');
+    });
+
+    it('returns "invalid" on a 403 (forbidden)', async () => {
+      postMock.mockRejectedValue({ response: { status: 403 } });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('invalid');
+    });
+
+    it('returns "unknown" on a network error (offline grace — keep state)', async () => {
+      postMock.mockRejectedValue(new Error('Network Error'));
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('unknown');
+    });
+
+    it('returns "unknown" on a 5xx server error (keep state)', async () => {
+      postMock.mockRejectedValue({ response: { status: 503 } });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('unknown');
+    });
+
+    it('returns "unknown" on an ambiguous 200 response (do not revoke)', async () => {
+      postMock.mockResolvedValue({ data: { message: 'ok' } });
+
+      const verdict = await revalidateLicense('PM-XXXX', 'dev-1');
+
+      expect(verdict.status).toBe('unknown');
     });
   });
 });
