@@ -52,6 +52,10 @@ const electronAPI = {
       ipcRenderer.invoke(IpcChannel.LICENSE_ACTIVATE, licenseKey),
 
     getFeatures: () => ipcRenderer.invoke(IpcChannel.LICENSE_GET_FEATURES),
+    
+    getKey: () => ipcRenderer.invoke(IpcChannel.LICENSE_GET_KEY),
+    
+    remove: () => ipcRenderer.invoke(IpcChannel.LICENSE_REMOVE),
   },
 
   // ─── Device ───────────────────────────────────────────────────────────

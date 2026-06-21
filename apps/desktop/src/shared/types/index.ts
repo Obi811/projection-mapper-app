@@ -502,6 +502,8 @@ export enum IpcChannel {
   LICENSE_VALIDATE = 'license:validate',
   LICENSE_ACTIVATE = 'license:activate',
   LICENSE_GET_FEATURES = 'license:getFeatures',
+  LICENSE_GET_KEY = 'license:getKey',
+  LICENSE_REMOVE = 'license:remove',
 
   // Device
   DEVICE_GET_ID = 'device:getId',

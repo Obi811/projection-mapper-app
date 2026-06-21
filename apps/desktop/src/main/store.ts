@@ -137,6 +137,11 @@ export function getFeatures(): FeatureFlag[] {
   return store.get(STORE_KEYS.FEATURES);
 }
 
+export function clearLicenseData(): void {
+  store.set(STORE_KEYS.LICENSE_KEY, null);
+  store.set(STORE_KEYS.FEATURES, []);
+}
+
 // ─── Projector Config persistence ───────────────────────────────────────────
 
 export function getProjectorConfigs(): ProjectorConfig[] {

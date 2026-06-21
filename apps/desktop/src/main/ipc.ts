@@ -30,6 +30,8 @@ import {
   clearAuthData,
   getUser,
   setLicenseData,
+  getLicenseKey,
+  clearLicenseData,
   getFeatures,
   getProjectorConfigs,
   setProjectorConfigs,
@@ -161,6 +163,16 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IpcChannel.LICENSE_GET_FEATURES, async () => {
     return getFeatures();
+  });
+
+  ipcMain.handle(IpcChannel.LICENSE_GET_KEY, async () => {
+    return getLicenseKey();
+  });
+
+  ipcMain.handle(IpcChannel.LICENSE_REMOVE, async () => {
+    clearLicenseData();
+    licenseService.setEnabledFeatures([]);
+    return { success: true };
   });
 
   // ─── Device ─────────────────────────────────────────────────────────────

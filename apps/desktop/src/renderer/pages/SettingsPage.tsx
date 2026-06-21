@@ -40,7 +40,9 @@ export const SettingsPage: React.FC = () => {
   const version = useAppVersion();
 
   const [licenseKey, setLicenseKey] = useState('');
+  const [activeLicenseKey, setActiveLicenseKey] = useState<string | null>(null);
   const [activating, setActivating] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(
     null,
   );
@@ -49,6 +51,16 @@ export const SettingsPage: React.FC = () => {
   const [devices, setDevices] = useState<RegisteredDevice[]>([]);
   const [dashboard, setDashboard] = useState<PortalDashboard | null>(null);
   const [loadingPortal, setLoadingPortal] = useState(false);
+
+  // Load active license key on mount
+  useEffect(() => {
+    if (window.electronAPI?.license?.getKey) {
+      window.electronAPI.license
+        .getKey()
+        .then((key) => setActiveLicenseKey(key))
+        .catch((err) => console.warn('Failed to load license key:', err));
+    }
+  }, []);
 
   // Load portal data (optional - gracefully fails if backend endpoints don't exist)
   useEffect(() => {
@@ -87,6 +99,7 @@ export const SettingsPage: React.FC = () => {
             type: 'ok',
             text: 'Lizenz erfolgreich aktiviert! Funktionen wurden freigeschaltet.',
           });
+          setActiveLicenseKey(licenseKey.trim());
           setLicenseKey('');
           await refresh();
         } else {
@@ -108,6 +121,32 @@ export const SettingsPage: React.FC = () => {
       });
     } finally {
       setActivating(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!window.confirm('Möchtest du die Lizenz wirklich entfernen?')) {
+      return;
+    }
+    setRemoving(true);
+    setMessage(null);
+    try {
+      if (window.electronAPI?.license?.remove) {
+        await window.electronAPI.license.remove();
+        setActiveLicenseKey(null);
+        setMessage({
+          type: 'ok',
+          text: 'Lizenz wurde entfernt. Premium-Funktionen sind deaktiviert.',
+        });
+        await refresh();
+      }
+    } catch (err) {
+      setMessage({
+        type: 'err',
+        text: `Entfernen fehlgeschlagen: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`,
+      });
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -156,31 +195,63 @@ export const SettingsPage: React.FC = () => {
         {/* Lizenz */}
         <section style={styles.card}>
           <h3 style={styles.cardTitle}>Lizenz</h3>
-          <p style={styles.cardText}>
-            Gib deinen Lizenzschlüssel ein, um Premium-Funktionen wie
-            Multi-Projektor, Keystone-Korrektur und das Addon-System
-            freizuschalten.
-          </p>
-          <div style={styles.licenseRow}>
-            <input
-              type="text"
-              value={licenseKey}
-              onChange={(e) => setLicenseKey(e.target.value)}
-              placeholder="XXXX-XXXX-XXXX-XXXX"
-              style={styles.input}
-              disabled={activating}
-            />
-            <button
-              style={{
-                ...styles.activateButton,
-                opacity: activating ? 0.6 : 1,
-              }}
-              onClick={handleActivate}
-              disabled={activating}
-            >
-              {activating ? 'Aktiviere…' : 'Aktivieren'}
-            </button>
-          </div>
+          
+          {activeLicenseKey ? (
+            // Aktive Lizenz anzeigen
+            <>
+              <p style={styles.cardText}>
+                Deine Lizenz ist aktiv. Premium-Funktionen sind freigeschaltet.
+              </p>
+              <div style={styles.licenseRow}>
+                <input
+                  type="text"
+                  value={activeLicenseKey}
+                  readOnly
+                  style={{ ...styles.input, opacity: 0.7 }}
+                />
+                <button
+                  style={{
+                    ...styles.removeButton,
+                    opacity: removing ? 0.6 : 1,
+                  }}
+                  onClick={handleRemove}
+                  disabled={removing}
+                >
+                  {removing ? 'Entferne…' : 'Entfernen'}
+                </button>
+              </div>
+            </>
+          ) : (
+            // Lizenz aktivieren
+            <>
+              <p style={styles.cardText}>
+                Gib deinen Lizenzschlüssel ein, um Premium-Funktionen wie
+                Multi-Projektor, Keystone-Korrektur und das Addon-System
+                freizuschalten.
+              </p>
+              <div style={styles.licenseRow}>
+                <input
+                  type="text"
+                  value={licenseKey}
+                  onChange={(e) => setLicenseKey(e.target.value)}
+                  placeholder="PM-XXXX-XXXX-XXXX-XXXX"
+                  style={styles.input}
+                  disabled={activating}
+                />
+                <button
+                  style={{
+                    ...styles.activateButton,
+                    opacity: activating ? 0.6 : 1,
+                  }}
+                  onClick={handleActivate}
+                  disabled={activating}
+                >
+                  {activating ? 'Aktiviere…' : 'Aktivieren'}
+                </button>
+              </div>
+            </>
+          )}
+          
           {message && (
             <p
               style={{
@@ -379,6 +450,17 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     backgroundColor: '#6366f1',
     color: '#fff',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  removeButton: {
+    padding: '10px 18px',
+    borderRadius: 8,
+    border: '1px solid rgba(248, 113, 113, 0.4)',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    color: '#f87171',
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
