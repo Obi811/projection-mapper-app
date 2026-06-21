@@ -1,6 +1,6 @@
 {
   "name": "@projection-mapper/mobile",
-  "version": "0.16.14",
+  "version": "0.16.15",
   "description": "Projection Mapper companion app — remote control and standalone mode",
   "private": true,
   "main": "index.ts",

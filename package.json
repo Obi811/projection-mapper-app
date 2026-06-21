@@ -1,6 +1,6 @@
 {
   "name": "projection-mapper-monorepo",
-  "version": "0.16.14",
+  "version": "0.16.15",
   "description": "Monorepo for the Projection Mapper desktop app, mobile companion app and shared packages",
   "private": true,
   "author": {
