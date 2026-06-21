@@ -125,7 +125,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRemove = async () => {
-    if (!window.confirm('Möchtest du die Lizenz wirklich entfernen?')) {
+    if (!window.confirm('Möchtest du die Lizenz wirklich entfernen? Die App wird neu geladen.')) {
       return;
     }
     setRemoving(true);
@@ -133,19 +133,14 @@ export const SettingsPage: React.FC = () => {
     try {
       if (window.electronAPI?.license?.remove) {
         await window.electronAPI.license.remove();
-        setActiveLicenseKey(null);
-        setMessage({
-          type: 'ok',
-          text: 'Lizenz wurde entfernt. Premium-Funktionen sind deaktiviert.',
-        });
-        await refresh();
+        // Reload the app to clear all feature-gate state across all components
+        window.location.reload();
       }
     } catch (err) {
       setMessage({
         type: 'err',
         text: `Entfernen fehlgeschlagen: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`,
       });
-    } finally {
       setRemoving(false);
     }
   };
