@@ -171,7 +171,6 @@ export async function activateLicense(
       '/licenses/activate',
       { license_key: licenseKey, device_id: deviceId, device_name: deviceName },
     );
-    console.log('[activateLicense] Raw server response:', JSON.stringify(data));
 
     // Special case: "Device already activated" — the server returns HTTP 200
     // with { message: "Device already activated", license_key, device_id } but
@@ -183,9 +182,6 @@ export async function activateLicense(
       typeof message === 'string' &&
       message.toLowerCase().includes('already activated')
     ) {
-      console.log(
-        '[activateLicense] Device already activated — fetching features via validate',
-      );
       const validation = await validateLicense(licenseKey, deviceId);
       return {
         success: true,
