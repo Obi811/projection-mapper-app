@@ -78,16 +78,19 @@ Professional icons and splash screens have been created for both desktop and mob
 
 ## Features
 
-### Current (v0.1.0)
+### Current (v0.16.x)
 - ✅ Electron desktop application with secure IPC architecture
 - ✅ React UI with dark theme optimized for projection work
 - ✅ Three.js WebGL canvas with text projection
 - ✅ Authentication service (email/password login & registration)
-- ✅ Social auth preparation (Google / Apple)
+- ✅ WebAuthn passkey support (hardware security keys)
 - ✅ License validation with device-ID binding
+- ✅ **Server-side license enforcement** — paused/revoked licenses disable features automatically
 - ✅ Feature gating system (basic & premium tiers)
-- ✅ Addon marketplace API client
+- ✅ Addon marketplace API client & runtime
 - ✅ Automatic token refresh with request queuing
+- ✅ Mobile companion app (Expo/React Native) with remote control
+- ✅ WebSocket-based remote control (QR-code pairing)
 
 ### Roadmap
 - 🔲 Keystone correction (corner-pin warping)
@@ -95,8 +98,6 @@ Professional icons and splash screens have been created for both desktop and mob
 - 🔲 Media import (images, videos, GIFs)
 - 🔲 Audio-reactive sync
 - 🔲 DMX lighting integration
-- ✅ Addon runtime & marketplace UI
-- 🔲 Remote control (mobile companion)
 - 🔲 Project save/load (.pmp files)
 - 🔲 Fullscreen output mode (per-display)
 
